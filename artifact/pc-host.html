@@ -352,7 +352,7 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
     round: null,          // { sid, state: 'ready'|'open'|'judging', duration, endsAt, startRow, judgedIds:Set }
     res: {},              // 답변ID → { score, stamp, line, comment, reaction } (이 화면에만 보관)
     sel: null, mvp: false, played: null, memo: false, judging: null, note: null, busy: false, list: [],
-    sound: true, sortByScore: false
+    sound: true, sortByScore: true   // 기본: 낮은 점수 → 높은 점수
   };
   const view = document.getElementById("view");
 
@@ -612,7 +612,7 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
     const ranked = scored.slice().sort((a, b) => resOf(b.id).score - resOf(a.id).score);
     ranked.forEach((r, i) => { r.rank = i + 1; });
     const mvp = ranked[0];
-    const list = S.sortByScore ? ranked.concat(judged.filter(r => resOf(r.id).score == null)) : judged;
+    const list = S.sortByScore ? ranked.slice().reverse().concat(judged.filter(r => resOf(r.id).score == null)) : judged;
     S.list = list;
     let selR = S.sel ? list.find(r => r.id === S.sel) : null;
     if (!selR) { S.sel = null; S.mvp = false; }
@@ -664,7 +664,7 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
           st2.avg != null ? h("span", { class: "chip big pos" }, "평균 " + st2.avg + "점") : null,
           st2.best != null ? h("span", { class: "chip big gold" }, "최고 " + st2.best + "점") : null) : null,
         scored.length ? h("div", { class: "rbtns" },
-          h("button", { class: "btn sm", type: "button", onclick: () => { S.sortByScore = !S.sortByScore; S.played = S.sel; renderStage(); } }, S.sortByScore ? "제출순 보기" : "점수순 보기"),
+          h("button", { class: "btn sm", type: "button", onclick: () => { S.sortByScore = !S.sortByScore; S.played = S.sel; renderStage(); } }, S.sortByScore ? "제출순 보기" : "낮은 점수순 보기"),
           mvp ? h("button", { class: "btn sm gold", type: "button", onclick: () => pick(mvp, true) }, "★ MVP 발표") : null) : null,
         S.note ? h("p", { class: "rnote" }, S.note) : null),
       judged.length
