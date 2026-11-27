@@ -240,11 +240,8 @@
       status.textContent = '데모 모드: 답변이 이 휴대폰에만 저장됐어요. (구글 시트 미연결)';
       return;
     }
-    status.innerHTML = '<span class="dot"></span>제출 완료! 진행자 화면에서 AI 반응을 기다리는 중이에요.';
-    // 반응 GIF 미리 받아 두기
-    ['positive', 'negative'].forEach(k => { const i = new Image(); i.src = art(s.id, k); });
-    pollStarted = Date.now();
-    poll(s, sub, pollGen);
+    // AI 채점 결과는 진행자 화면(앞 화면)에서 함께 봅니다.
+    status.textContent = '제출 완료! AI 점수와 칭찬 도장은 앞 화면에서 함께 확인해요.';
   }
 
   async function poll(s, sub, gen) {

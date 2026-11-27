@@ -184,11 +184,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .spot { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; background: #1d2b45e6; padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
 .spot-in { width: 100%; display: grid; justify-items: center; }
 .spot .stage { width: min(100%, calc((100dvh - 110px) * 16 / 9)); }
-.spot .panel { position: absolute; left: 3.6cqi; top: 3.4cqi; width: 50cqi; display: grid; gap: 1.6cqi; }
-.spot .mine { background: var(--card); border: .25cqi solid var(--ink); border-radius: 1.6cqi; padding: 1.3cqi 1.8cqi; box-shadow: 0 .35cqi 0 var(--ink); }
-.spot .mine small { display: block; font-size: 1.3cqi; font-weight: 700; color: var(--teal); }
-.spot .mine p { margin: .4cqi 0 0; font-size: 2cqi; line-height: 1.5; white-space: pre-wrap; max-height: 21cqi; overflow: auto; }
-.spot .memo { font-size: 1.5cqi; background: #fff6df; border: .2cqi dashed var(--ink); border-radius: 1.2cqi; padding: .9cqi 1.3cqi; }
+.stage .panel { position: absolute; left: 3.6cqi; top: 3.4cqi; width: 50cqi; display: grid; gap: 1.6cqi; }
+.stage .mine { background: var(--card); border: .25cqi solid var(--ink); border-radius: 1.6cqi; padding: 1.3cqi 1.8cqi; box-shadow: 0 .35cqi 0 var(--ink); }
+.stage .mine small { display: block; font-size: 1.3cqi; font-weight: 700; color: var(--teal); }
+.stage .mine p { margin: .4cqi 0 0; font-size: 2cqi; line-height: 1.5; white-space: pre-wrap; max-height: 21cqi; overflow: auto; }
+.stage .memo { font-size: 1.5cqi; background: #fff6df; border: .2cqi dashed var(--ink); border-radius: 1.2cqi; padding: .9cqi 1.3cqi; }
 .spot .bar2 { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .spot .bar2 .btn { background: var(--card); }
 .spot .bar2 .btn.primary { background: var(--teal); color: #fff; }
@@ -222,7 +222,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .acard .rank.r1 { background: #f6d36b; } .acard .rank.r2 { background: #dfe3ea; } .acard .rank.r3 { background: #ecc39c; }
 .acard .fail-tag { position: absolute; right: 12px; top: 12px; font-size: 12px; font-weight: 700; color: var(--muted); }
 .acard .line { margin-right: -84px; }
-.spot .mine { position: relative; padding-right: 9cqi; }
+.stage .mine { position: relative; padding-right: 9cqi; }
 .meter2 { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1.2cqi; background: var(--card); border: .25cqi solid var(--ink); border-radius: 1.4cqi; padding: .8cqi 1.4cqi; box-shadow: 0 .35cqi 0 var(--ink); }
 .meter2 span { font-size: 1.4cqi; font-weight: 700; color: var(--ink-2); }
 .meter2 .track { height: 1.6cqi; border: .2cqi solid var(--ink); border-radius: 999px; background: var(--paper-2); overflow: hidden; }
@@ -233,8 +233,20 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 @keyframes pop { 0% { transform: scale(.85); opacity: 0; } 70% { transform: scale(1.03); opacity: 1; } 100% { transform: scale(1); } }
 .confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .ribbon { position: absolute; left: 50%; top: 2cqi; transform: translateX(-50%); z-index: 3; font-family: var(--display); font-size: 3cqi; color: #5a3f00; background: #f6d36b; border: .25cqi solid var(--ink); border-radius: 999px; padding: .4cqi 3cqi; box-shadow: 0 .35cqi 0 var(--ink); white-space: nowrap; }
-.spot .panel { top: 4.4cqi; width: 48cqi; }
-.spot .stage.mvp .panel { top: 8.4cqi; }
+.stage .panel { top: 4.4cqi; width: 48cqi; }
+.stage.mvp .panel { top: 8.4cqi; }
+
+/* ---------- 결과 영역 (무대 아래) ---------- */
+.stage-wrap .stage { width: min(100%, calc((100dvh - 200px) * 16 / 9)); scroll-margin-top: 80px; }
+.results { margin-top: 28px; scroll-margin-top: 70px; }
+.rhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.rhead h2 { margin: 0 8px 0 0; font-family: var(--display); font-weight: 400; font-size: 30px; }
+.rhead .spacer { flex: 1; }
+.results .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 1280px) { .results .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .results .cards { grid-template-columns: 1fr; } }
+.acard.sel { outline: 4px solid var(--tangerine); outline-offset: 2px; }
+.hint.count { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 
@@ -248,7 +260,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   </header>
   <main class="view" id="view"><div class="notice"><h2>시트에 연결하는 중…</h2><p>Google Sheets 커넥터로 상황과 답변을 불러옵니다.</p></div></main>
 </div>
-<div class="spot" id="spot" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -286,11 +297,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     scenarios: DEFAULTS.slice(), rows: [], locked: null,
     view: "loading", cur: null,
     round: null,          // { sid, state: 'ready'|'open'|'judging', duration, endsAt, startRow, judgedIds:Set }
-    spot: null,           // { list, idx, memo, mvp, played, timers }
-    sound: true, sortByScore: false, lastNote: null
+    res: {},              // 답변ID → { score, stamp, line, comment, reaction } (이 화면에만 보관)
+    sel: null, mvp: false, played: null, memo: false, judging: null, note: null, busy: false, list: [],
+    sound: true, sortByScore: false
   };
   const view = document.getElementById("view");
-  const spotEl = document.getElementById("spot");
 
   /* ---------- 작은 도구 ---------- */
   function h(tag, attrs) {
@@ -319,17 +330,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     t.textContent = msg; t.hidden = false;
     clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200);
   }
-  const nowText = () => {
-    const d = new Date(), p = n => String(n).padStart(2, "0");
-    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
-  };
-  const cleanCell = s => String(s == null ? "" : s).replace(/^[=+\-@\s]+/, "").slice(0, 300);
-  function normReaction(v) {
-    const s = String(v || "").trim().toLowerCase();
-    if (["긍정", "positive"].includes(s)) return "positive";
-    if (["부정", "보완", "negative"].includes(s)) return "negative";
-    return null;
-  }
+
+
   const scen = id => S.scenarios.find(s => s.id === id);
 
   /* ---------- 시트 (Google Sheets 커넥터) ---------- */
@@ -350,13 +352,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     if (list.length) S.scenarios = list;
   }
   async function loadRows() {
-    const v = await sheetGet("답변!A2:L");
+    const v = await sheetGet("답변!A2:F");
     S.rows = v.map((r, i) => ({
-      row: i + 2, id: String(r[0] || ""), at: r[1] || "", participant: r[2] || "", sid: String(r[3] || ""),
-      answer: String(r[5] || ""), reaction: normReaction(r[6]), line: String(r[7] || ""), comment: String(r[9] || ""),
-      score: r[10] !== undefined && r[10] !== "" && isFinite(Number(r[10])) ? Number(r[10]) : null, stamp: String(r[11] || ""),
-      failed: false
-    })).filter(x => x.id);
+      row: i + 2, id: String(r[0] || ""), participant: r[2] || "", sid: String(r[3] || ""), answer: String(r[5] || "")
+    })).filter(x => x.id && x.answer.trim());
   }
   async function loadLock() {
     const v = await sheetGet("설정!B3");
@@ -367,12 +366,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     await sheetSet("설정!B3", [[v ? "Y" : "N"]]);
     S.locked = v; renderLock();
   }
-  async function writeReaction(item) {
-    await sheetSet("답변!G" + item.row + ":L" + item.row, [[
-      item.reaction === "positive" ? "긍정" : "부정", cleanCell(item.line), nowText(), cleanCell(item.comment),
-      item.score == null ? "" : item.score, cleanCell(item.stamp)
-    ]]);
-  }
+
 
   function connectorMessage(e) {
     const code = e && e.code;
@@ -404,7 +398,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     pill.classList.toggle("locked", S.locked);
     document.getElementById("lockText").textContent = S.locked ? "답변 마감" : "답변 받는 중";
     btn.textContent = S.locked ? "제출 열기" : "제출 마감";
-    btn.disabled = !!(S.round && S.round.state === "judging");
+    btn.disabled = !!S.judging;
   }
   document.getElementById("lockBtn").addEventListener("click", async e => {
     const b = e.currentTarget; b.disabled = true;
@@ -421,26 +415,27 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   }
 
   /* ---------- 상황 선택 ---------- */
+  const resOf = id => S.res[id] || null;
+  const answersOf = sid => S.rows.filter(r => r.sid === sid);
+  function scoreStats(list) {
+    const sc = list.map(r => resOf(r.id)).filter(x => x && x.score != null).map(x => x.score);
+    return { n: sc.length, avg: sc.length ? Math.round(sc.reduce((a, b) => a + b, 0) / sc.length) : null, best: sc.length ? Math.max.apply(null, sc) : null };
+  }
   function renderSelect() {
     stopTimers();
-    S.view = "select"; S.cur = null; S.round = null; renderLock();
+    S.view = "select"; S.cur = null; S.sel = null; renderLock();
     const cards = S.scenarios.map((s, i) => {
-      const rs = S.rows.filter(r => r.sid === s.id);
-      const pend = rs.filter(r => !r.reaction).length;
-      const sc = rs.filter(r => r.score != null);
-      const avg = sc.length ? Math.round(sc.reduce((a, r) => a + r.score, 0) / sc.length) : null;
-      const best = sc.length ? Math.max.apply(null, sc.map(r => r.score)) : null;
+      const rs = answersOf(s.id), st = scoreStats(rs);
       return h("button", { class: "scene", type: "button", style: "--accent:" + (ACCENT[s.id] || "#efbf87"), onclick: () => openStage(s) },
         h("div", { class: "art" }, img(art(s.id, "background"), "bg"), img(art(s.id, "idle"), "who"), h("span", { class: "no" }, "상황 " + String(i + 1).padStart(2, "0"))),
         h("div", { class: "txt" },
           h("h3", null, s.title), h("q", null, s.quote),
           h("div", { class: "counts" },
             h("span", { class: "chip" }, "답변 " + rs.length),
-            pend ? h("span", { class: "chip wait" }, "채점 대기 " + pend) : null,
-            avg != null ? h("span", { class: "chip pos" }, "평균 " + avg + "점") : null,
-            best != null ? h("span", { class: "chip gold" }, "최고 " + best + "점") : null)));
+            st.avg != null ? h("span", { class: "chip pos" }, "평균 " + st.avg + "점") : null,
+            st.best != null ? h("span", { class: "chip gold" }, "최고 " + st.best + "점") : null)));
     });
-    setChildren(view, 
+    setChildren(view,
       h("div", { class: "head" },
         h("div", null, h("h1", null, "오늘 다룰 상황을 고르세요"),
           h("p", null, "신입직원은 휴대폰에서 원하는 상황에 자유롭게 답합니다. 상황을 띄우고 [채점하기]를 누르면 Claude가 답변마다 점수와 칭찬 도장을 줍니다. 제출을 막으려면 위쪽 [제출 마감]을 누르세요.")),
@@ -452,33 +447,26 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     catch (e) { toast(connectorMessage(e)[0]); }
   }
 
-  /* ---------- 무대 ---------- */
+  /* ---------- 무대 + 결과 (한 화면) ---------- */
+  let pollT = null, polling = false, animTimers = [];
+  function stopTimers() { clearInterval(pollT); pollT = null; clearAnim(); }
+  function clearAnim() { animTimers.forEach(t => { clearTimeout(t); clearInterval(t); }); animTimers = []; }
   function openStage(s) {
-    S.cur = s; S.view = "stage";
-    S.round = { sid: s.id, state: "ready", judgedIds: new Set(), total: 0, done: 0 };
-    renderStage();
     stopTimers();
+    S.cur = s; S.view = "stage"; S.sel = null; S.mvp = false; S.played = null; S.note = null; S.memo = false;
+    renderStage();
+    window.scrollTo(0, 0);
     pollT = setInterval(poll, POLL_MS);
   }
   function stageBase(s, actorKey) {
-    const st = h("div", { class: "stage", style: "--accent:" + (ACCENT[s.id] || "#efbf87") },
+    return h("div", { class: "stage", id: "stage", style: "--accent:" + (ACCENT[s.id] || "#efbf87") },
       img(art(s.id, "background"), "bg"), h("div", { class: "shade" }), img(art(s.id, actorKey || "idle"), "actor", s.role));
-    return st;
   }
-  let pollT = null, polling = false;
-  function stopTimers() { clearInterval(pollT); pollT = null; }
-  const counts = sid => {
-    const rs = S.rows.filter(r => r.sid === sid);
-    return { total: rs.length, pend: rs.filter(r => !r.reaction).length, judged: rs.filter(r => r.reaction).length };
-  };
-  function countNode(c) {
-    return [h("div", { class: "t" }, String(c.pend)), h("div", { class: "n" }, "채점 대기 답변 · 전체 ", h("b", null, String(c.total)), "개")];
+  const judgeLabel = n => "★ 채점하기 (" + n + "개)";
+  function countNode(n) {
+    return [h("div", { class: "t" }, String(n)), h("div", { class: "n" }, "도착한 답변")];
   }
-
-  function renderStage() {
-    const s = S.cur, R = S.round;
-    renderLock();
-    const c = counts(s.id);
+  function questionStage(s, total) {
     const st = stageBase(s, "idle");
     st.append(
       h("div", { class: "copy" },
@@ -487,36 +475,142 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
         h("p", { class: "sit" }, s.situation),
         h("div", { class: "bubble" }, h("div", { class: "who" }, h("i"), s.role), s.line),
         h("p", { class: "q" }, h("span", null, "질문"), s.question)),
-      h("div", { class: "rookie" }, img(rookie(R.state === "judging" ? "submitted" : "typing"), "", "신입직원")),
-      h("div", { class: "clock", id: "countBox" }, countNode(c)));
-    if (R.state === "judging") {
+      h("div", { class: "rookie" }, img(rookie(S.judging ? "submitted" : "typing"), "", "신입직원")),
+      h("div", { class: "clock", id: "countBox" }, countNode(total)));
+    return { st, run: null };
+  }
+  function answerStage(s, r) {
+    const x = resOf(r.id) || { failed: true };
+    const animate = x.score != null && S.played !== r.id && !reduced();
+    S.played = r.id;
+    const finalActor = x.reaction || "idle";
+    const st = stageBase(s, animate ? "idle" : finalActor);
+    if (S.mvp) st.classList.add("mvp");
+    const actor = st.querySelector(".actor");
+    const stamp = x.score != null ? stampEl(x, animate ? "big pre" : "big") : null;
+    const scoreNum = h("b", null, animate ? "0" : (x.score != null ? String(x.score) : "–"));
+    const barFill = h("i", { style: "width:" + (animate ? 0 : (x.score || 0)) + "%" });
+    const bubble = h("div", { class: "bubble" + (animate ? " pre" : "") },
+      h("div", { class: "who" }, h("i"), s.role),
+      x.line || "아직 채점하지 못했어요. '다시 채점'을 눌러 주세요.");
+    const canvas = h("canvas", { class: "confetti" });
+    st.append(
+      S.mvp ? h("div", { class: "ribbon" }, "★ 오늘의 MVP ★") : null,
+      h("div", { class: "panel" },
+        h("div", { class: "mine" }, h("small", null, "신입 답변 #" + r.no), h("p", null, r.answer), stamp),
+        h("div", { class: "meter2 t-" + tierOf(x.score).key }, h("span", null, "AI 점수"), h("div", { class: "track" }, barFill), h("em", null, scoreNum, "점")),
+        bubble,
+        S.memo && x.comment ? h("div", { class: "memo" }, "진행자 메모 · " + x.comment) : null),
+      canvas);
+    const run = !animate ? null : () => {
+      const target = x.score, dur = 1300, t0 = performance.now();
+      let last = -1;
+      const iv = setInterval(() => {
+        const k = Math.min(1, (performance.now() - t0) / dur), v = Math.round(target * (1 - Math.pow(1 - k, 3)));
+        if (v !== last && v % 4 === 0) tick2();
+        last = v; scoreNum.textContent = String(v); barFill.style.width = v + "%";
+        if (k >= 1) {
+          clearInterval(iv);
+          animTimers.push(setTimeout(() => {
+            stamp.classList.remove("pre"); stamp.classList.add("slam");
+            st.classList.add("shake");
+            thump(target >= 85 || S.mvp);
+            actor.src = art(s.id, finalActor);
+            bubble.classList.remove("pre"); bubble.classList.add("pop");
+            if (target >= 85 || S.mvp) confetti(canvas, S.mvp ? 220 : 140);
+          }, 250));
+        }
+      }, 30);
+      animTimers.push(iv);
+    };
+    return { st, run };
+  }
+  function renderStage() {
+    clearAnim();
+    const s = S.cur;
+    renderLock();
+    const all = answersOf(s.id);
+    all.forEach((r, i) => { r.no = i + 1; });
+    const judged = all.filter(r => resOf(r.id));
+    const scored = judged.filter(r => resOf(r.id).score != null);
+    const ranked = scored.slice().sort((a, b) => resOf(b.id).score - resOf(a.id).score);
+    ranked.forEach((r, i) => { r.rank = i + 1; });
+    const mvp = ranked[0];
+    const list = S.sortByScore ? ranked.concat(judged.filter(r => resOf(r.id).score == null)) : judged;
+    S.list = list;
+    let selR = S.sel ? list.find(r => r.id === S.sel) : null;
+    if (!selR) { S.sel = null; S.mvp = false; }
+    const view1 = selR ? answerStage(s, selR) : questionStage(s, all.length);
+    const st = view1.st;
+    if (S.judging) {
       st.append(h("div", { class: "judging" }, h("div", null,
         h("b", null, "Claude 심사위원이 채점 중…"),
-        h("span", { id: "jText" }, R.done + " / " + R.total),
-        h("div", { class: "meter" }, h("i", { id: "jBar", style: "width:" + (R.total ? Math.round(R.done / R.total * 100) : 0) + "%" })))));
+        h("span", { id: "jText" }, S.judging.done + " / " + S.judging.total),
+        h("div", { class: "meter" }, h("i", { id: "jBar", style: "width:" + (S.judging.total ? Math.round(S.judging.done / S.judging.total * 100) : 0) + "%" })))));
     }
-    const controls = R.state === "judging"
-      ? h("div", { class: "controls" }, h("span", { class: "hint" }, "채점이 끝나면 결과 화면으로 넘어갑니다."))
-      : h("div", { class: "controls" },
-          h("button", { class: "btn", type: "button", onclick: renderSelect }, "← 상황 목록"),
-          h("button", { class: "btn primary", type: "button", id: "judgeBtn", disabled: !c.pend, onclick: () => judge(s) },
-            c.pend ? "★ 채점하기 (" + c.pend + "개)" : "채점할 새 답변 없음"),
-          c.judged ? h("button", { class: "btn", type: "button", onclick: () => { S.round.judgedIds = new Set(); renderResults(s, null); } }, "채점 결과 보기 (" + c.judged + "개)") : null,
-          h("span", { class: "hint" }, "답변 수는 3초마다 새로 고쳐져요 · Space: 채점 · F: 전체화면"));
-    setChildren(view, h("div", { class: "stage-wrap" }, st, controls));
+    const idx = selR ? list.indexOf(selR) : -1;
+    const controls = S.judging
+      ? h("div", { class: "controls" }, h("span", { class: "hint" }, "채점이 끝나면 아래에 결과 카드가 나옵니다."))
+      : selR
+        ? h("div", { class: "controls" },
+            h("button", { class: "btn sm", type: "button", disabled: idx <= 0, onclick: () => pick(list[idx - 1]) }, "← 이전"),
+            h("span", { class: "hint count" }, (idx + 1) + " / " + list.length),
+            h("button", { class: "btn sm", type: "button", disabled: idx >= list.length - 1, onclick: () => pick(list[idx + 1]) }, "다음 →"),
+            h("button", { class: "btn sm", type: "button", onclick: backToQuestion }, "질문 보기"),
+            h("button", { class: "btn sm", type: "button", onclick: () => { S.memo = !S.memo; S.played = S.sel; renderStage(); } }, S.memo ? "메모 숨기기" : "진행자 메모"),
+            h("button", { class: "btn sm", type: "button", disabled: !!S.busy, onclick: () => rejudge(selR) }, S.busy ? "채점 중…" : "다시 채점"),
+            h("button", { class: "btn sm", type: "button", onclick: () => { S.sound = !S.sound; S.played = S.sel; renderStage(); } }, S.sound ? "소리 끄기" : "소리 켜기"))
+        : h("div", { class: "controls" },
+            h("button", { class: "btn", type: "button", onclick: renderSelect }, "← 상황 목록"),
+            h("button", { class: "btn primary", type: "button", id: "judgeBtn", onclick: () => judge(s) }, judgeLabel(all.length)),
+            h("span", { class: "hint" }, "누를 때마다 이 상황의 답변 전체를 새로 채점해요 · Space: 채점 · F: 전체화면"));
+
+    const st2 = scoreStats(judged);
+    const cards = list.map(r => {
+      const x = resOf(r.id), t = tierOf(x.score);
+      return h("button", { class: "acard t-" + t.key + (x.failed ? " failed" : "") + (r.id === S.sel ? " sel" : ""), type: "button", onclick: () => pick(r) },
+        h("div", { class: "top" },
+          h("span", { class: "num" }, "#" + r.no),
+          S.sortByScore && r.rank && x.score != null ? h("span", { class: "rank" + (r.rank <= 3 ? " r" + r.rank : "") }, r.rank + "위") : null),
+        x.score != null ? stampEl(x, "mini") : h("span", { class: "fail-tag" }, "채점 실패"),
+        h("p", { class: "ans" }, r.answer),
+        x.line ? h("p", { class: "line" }, s.role + ": " + x.line) : null);
+    });
+    const results = (judged.length || S.note) ? h("section", { class: "results" },
+      h("div", { class: "rhead" },
+        h("h2", null, "채점 결과"),
+        h("span", { class: "chip big" }, "답변 " + judged.length),
+        st2.avg != null ? h("span", { class: "chip big pos" }, "평균 " + st2.avg + "점") : null,
+        st2.best != null ? h("span", { class: "chip big gold" }, "최고 " + st2.best + "점") : null,
+        h("span", { class: "spacer" }),
+        scored.length ? h("button", { class: "btn sm", type: "button", onclick: () => { S.sortByScore = !S.sortByScore; S.played = S.sel; renderStage(); } }, S.sortByScore ? "제출순 보기" : "점수순 보기") : null,
+        mvp ? h("button", { class: "btn sm gold", type: "button", onclick: () => pick(mvp, true) }, "★ MVP 발표") : null),
+      S.note ? h("p", { class: "empty", style: "padding:14px;text-align:left" }, S.note) : null,
+      h("div", { class: "cards" }, cards),
+      judged.length ? h("p", { class: "controls", style: "margin-top:12px" }, h("span", { class: "hint" }, "카드를 누르면 위 화면에서 점수가 올라가고 도장이 쾅! 찍혀요. ← → 로 넘기고 Esc로 질문 화면에 돌아갑니다.")) : null) : null;
+
+    setChildren(view, h("div", { class: "stage-wrap" }, st, controls), results);
+    if (view1.run) view1.run();
   }
+  function pick(r, mvp) {
+    if (!r) return;
+    S.sel = r.id; S.mvp = !!mvp; S.played = null;
+    renderStage();
+    const el = document.getElementById("stage");
+    if (el) el.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+  }
+  function backToQuestion() { S.sel = null; S.mvp = false; renderStage(); }
   async function poll() {
-    if (polling || S.view !== "stage" || !S.round || S.round.state !== "ready") return;
+    if (polling || S.view !== "stage" || S.judging) return;
     polling = true;
     try {
-      const before = counts(S.cur.id);
+      const before = answersOf(S.cur.id).length;
       await loadRows();
-      const after = counts(S.cur.id);
-      if (S.view !== "stage" || S.round.state !== "ready") return;
-      if (before.pend !== after.pend || before.total !== after.total || before.judged !== after.judged) {
-        const box = document.getElementById("countBox"); if (box) setChildren(box, countNode(after));
-        const b = document.getElementById("judgeBtn");
-        if (b) { b.disabled = !after.pend; b.textContent = after.pend ? "★ 채점하기 (" + after.pend + "개)" : "채점할 새 답변 없음"; }
+      if (S.view !== "stage" || S.judging) return;
+      const n = answersOf(S.cur.id).length;
+      if (n !== before) {
+        const box = document.getElementById("countBox"); if (box) setChildren(box, countNode(n));
+        const b = document.getElementById("judgeBtn"); if (b) b.textContent = judgeLabel(n);
       }
     } catch (e) { /* 다음 주기에 다시 */ }
     finally { polling = false; }
@@ -572,55 +666,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     arr.forEach(o => { if (o && o.id != null) byId.set(String(o.id), o); });
     return byId;
   }
-  function applyResult(it, o) {
-    const n = Math.round(Number(o && o.score));
-    if (!isFinite(n)) return false;
-    it.score = Math.max(0, Math.min(100, n));
-    it.stamp = String(o.stamp || tierOf(it.score).label).trim().slice(0, 10);
-    it.line = String(o.line || "").trim();
-    it.comment = String(o.comment || "").trim();
-    it.reaction = it.score >= PASS ? "positive" : "negative";
-    it.failed = false;
-    return true;
-  }
-  async function judge(s) {
-    stopTimers();
-    const R = S.round || (S.round = { sid: s.id, state: "ready", duration: 180, judgedIds: new Set() });
-    const pending = S.rows.filter(r => r.sid === s.id && !r.reaction);
-    if (!pending.length) { renderResults(s, "채점할 새 답변이 없어요."); return; }
-    if (!S.sample) { renderResults(s, "이 화면에서는 Claude를 부를 수 없어요. claude.ai에서 열어 주세요."); return; }
-    R.state = "judging"; R.total = pending.length; R.done = 0;
-    renderStage();
-    let lastErr = null;
-    for (let i = 0; i < pending.length; i += BATCH) {
-      const chunk = pending.slice(i, i + BATCH);
-      let byId = null;
-      try { byId = await askClaude(s, chunk); }
-      catch (e) {
-        lastErr = e;
-        if (!(e && (e.code === "not_granted" || e.code === "sampling_disabled"))) {
-          try { byId = await askClaude(s, chunk); } catch (e2) { lastErr = e2; }
-        }
-      }
-      for (const it of chunk) {
-        R.judgedIds.add(it.id);
-        if (!applyResult(it, byId && byId.get(it.id))) { it.failed = true; continue; }
-        try { await writeReaction(it); it.writeFailed = false; }
-        catch (e) { it.writeFailed = true; lastErr = lastErr || e; }
-      }
-      R.done += chunk.length;
-      const jt = document.getElementById("jText"), jb = document.getElementById("jBar");
-      if (jt) jt.textContent = R.done + " / " + R.total;
-      if (jb) jb.style.width = Math.round(R.done / R.total * 100) + "%";
-    }
-    const failed = pending.filter(it => it.failed).length;
-    const wfail = pending.filter(it => it.writeFailed).length;
-    let note = null;
-    if (failed) note = failed + "개 답변은 채점하지 못했어요. " + sampleMessage(lastErr);
-    if (wfail) note = (note ? note + " " : "") + wfail + "개는 시트에 기록하지 못했어요. 카드를 열어 다시 채점해 주세요.";
-    renderResults(s, note);
-  }
-
   /* ---------- 도장 · 효과 ---------- */
   function stampEl(r, cls) {
     const t = tierOf(r.score);
@@ -675,149 +720,79 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   }
   const reduced = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  /* ---------- 결과 ---------- */
-  function resultList(s) {
-    const R = S.round;
-    const mine = R && R.judgedIds && R.judgedIds.size ? S.rows.filter(r => R.judgedIds.has(r.id)) : [];
-    return mine.length ? mine : S.rows.filter(r => r.sid === s.id && (r.reaction || r.failed));
+  function makeRes(o) {
+    const n = Math.round(Number(o && o.score));
+    if (!isFinite(n)) return null;
+    const score = Math.max(0, Math.min(100, n));
+    return {
+      score, stamp: String(o.stamp || tierOf(score).label).trim().slice(0, 10),
+      line: String(o.line || "").trim(), comment: String(o.comment || "").trim(),
+      reaction: score >= PASS ? "positive" : "negative"
+    };
   }
-  function renderResults(s, note) {
-    stopTimers();
-    S.view = "results"; S.cur = s; S.lastNote = note === undefined ? S.lastNote : note;
-    if (S.round) S.round.state = "done";
-    renderLock();
-    const base = resultList(s);
-    base.forEach((r, i) => { r.no = i + 1; });
-    const scored = base.filter(r => r.score != null);
-    const avg = scored.length ? Math.round(scored.reduce((a, r) => a + r.score, 0) / scored.length) : null;
-    const ranked = scored.slice().sort((a, b) => b.score - a.score);
-    ranked.forEach((r, i) => { r.rank = i + 1; });
-    const mvp = ranked[0];
-    const list = S.sortByScore ? ranked.concat(base.filter(r => r.score == null)) : base;
-    const cards = list.map((r, i) => {
-      const t = tierOf(r.score);
-      return h("button", { class: "acard t-" + t.key + (r.failed ? " failed" : ""), type: "button", onclick: () => openSpot(list, i) },
-        h("div", { class: "top" },
-          h("span", { class: "num" }, "#" + r.no),
-          S.sortByScore && r.rank ? h("span", { class: "rank" + (r.rank <= 3 ? " r" + r.rank : "") }, r.rank + "위") : null),
-        r.score != null ? stampEl(r, "mini") : h("span", { class: "fail-tag" }, "채점 실패"),
-        h("p", { class: "ans" }, r.answer),
-        r.line ? h("p", { class: "line" }, s.role + ": " + r.line) : null);
-    });
-    const idx = S.scenarios.indexOf(s);
-    const next = S.scenarios[idx + 1];
-    setChildren(view,
-      h("div", { class: "head" },
-        h("div", null, h("h1", null, s.title + " · 채점 결과"),
-          h("div", { class: "summary" },
-            h("span", { class: "chip big" }, "답변 " + base.length),
-            avg != null ? h("span", { class: "chip big pos" }, "평균 " + avg + "점") : null,
-            mvp ? h("span", { class: "chip big gold" }, "최고 " + mvp.score + "점") : null)),
-        h("div", { class: "controls" },
-          h("button", { class: "btn", type: "button", onclick: renderSelect }, "← 상황 목록"),
-          scored.length ? h("button", { class: "btn", type: "button", onclick: () => { S.sortByScore = !S.sortByScore; renderResults(s); } }, S.sortByScore ? "제출순 보기" : "점수순 보기") : null,
-          mvp ? h("button", { class: "btn gold", type: "button", onclick: () => openSpot([mvp], 0, true) }, "★ MVP 발표") : null,
-          h("button", { class: "btn", type: "button", onclick: () => openStage(s) }, "이 상황 다시 진행"),
-          next ? h("button", { class: "btn primary", type: "button", onclick: () => openStage(next) }, "다음 상황 →") : null)),
-      S.lastNote ? h("p", { class: "empty", style: "padding:14px;text-align:left" }, S.lastNote) : null,
-      list.length ? h("div", { class: "cards" }, cards) : h("div", { class: "empty" }, "아직 채점한 답변이 없어요."),
-      list.length ? h("p", { class: "controls", style: "margin-top:14px" }, h("span", { class: "hint" }, "카드를 누르면 점수가 올라가고 도장이 쾅! 찍혀요. ← → 로 넘기고 Esc로 닫습니다.")) : null);
-  }
-
-  /* ---------- 스포트라이트 ---------- */
-  function clearSpotTimers() { if (S.spot && S.spot.timers) { S.spot.timers.forEach(t => { clearTimeout(t); clearInterval(t); }); S.spot.timers = []; } }
-  function openSpot(list, idx, mvp) { S.spot = { list, idx, memo: false, mvp: !!mvp, played: null, timers: [] }; spotEl.hidden = false; renderSpot(); }
-  function closeSpot() { clearSpotTimers(); spotEl.hidden = true; spotEl.replaceChildren(); S.spot = null; if (S.view === "results") renderResults(S.cur); }
-  function go(d) { const sp = S.spot; if (!sp) return; const n = sp.idx + d; if (n < 0 || n >= sp.list.length) return; clearSpotTimers(); sp.idx = n; sp.played = null; renderSpot(); }
-  function renderSpot() {
-    clearSpotTimers();
-    const sp = S.spot, r = sp.list[sp.idx], s = scen(r.sid) || S.cur;
-    const scoredNow = r.score != null;
-    const animate = scoredNow && sp.played !== r.id && !reduced();
-    sp.played = r.id;
-    const finalActor = r.reaction || "idle";
-    const st = stageBase(s, animate ? "idle" : finalActor);
-    const actor = st.querySelector(".actor");
-    const stamp = scoredNow ? stampEl(r, animate ? "big pre" : "big") : null;
-    const scoreNum = h("b", null, animate ? "0" : (scoredNow ? String(r.score) : "–"));
-    const barFill = h("i", { style: "width:" + (animate ? 0 : (r.score || 0)) + "%" });
-    const bubble = h("div", { class: "bubble" + (animate ? " pre" : "") },
-      h("div", { class: "who" }, h("i"), s.role),
-      r.line || (r.failed ? "아직 채점하지 못했어요. '다시 채점'을 눌러 주세요." : "…"));
-    const canvas = h("canvas", { class: "confetti" });
-    if (sp.mvp) st.classList.add("mvp");
-    st.append(
-      sp.mvp ? h("div", { class: "ribbon" }, "★ 오늘의 MVP ★") : null,
-      h("div", { class: "panel" },
-        h("div", { class: "mine" }, h("small", null, "신입 답변 #" + (r.no || sp.idx + 1)), h("p", null, r.answer), stamp),
-        h("div", { class: "meter2 t-" + tierOf(r.score).key }, h("span", null, "AI 점수"), h("div", { class: "track" }, barFill), h("em", null, scoreNum, "점")),
-        bubble,
-        sp.memo && r.comment ? h("div", { class: "memo" }, "진행자 메모 · " + r.comment) : null),
-      canvas);
-    const busy = sp.busy;
-    setChildren(spotEl, h("div", { class: "spot-in" }, st,
-      h("div", { class: "bar2" },
-        sp.list.length > 1 ? h("button", { class: "btn sm", type: "button", disabled: sp.idx === 0, onclick: () => go(-1) }, "← 이전") : null,
-        sp.list.length > 1 ? h("span", { class: "count" }, (sp.idx + 1) + " / " + sp.list.length) : null,
-        sp.list.length > 1 ? h("button", { class: "btn sm", type: "button", disabled: sp.idx === sp.list.length - 1, onclick: () => go(1) }, "다음 →") : null,
-        h("button", { class: "btn sm", type: "button", onclick: () => { sp.memo = !sp.memo; renderSpot(); } }, sp.memo ? "메모 숨기기" : "진행자 메모"),
-        h("button", { class: "btn sm", type: "button", disabled: busy, onclick: () => rejudge(r) }, busy ? "채점 중…" : "다시 채점"),
-        h("button", { class: "btn sm", type: "button", onclick: () => { S.sound = !S.sound; renderSpot(); } }, S.sound ? "소리 끄기" : "소리 켜기"),
-        h("button", { class: "btn sm primary", type: "button", onclick: closeSpot }, "닫기 (Esc)"))));
-    if (!animate) return;
-    // 점수 드럼롤 → 도장 쾅 → 리액션
-    const target = r.score, dur = 1300, t0 = performance.now();
-    let lastShown = -1;
-    const iv = setInterval(() => {
-      const k = Math.min(1, (performance.now() - t0) / dur), e = 1 - Math.pow(1 - k, 3);
-      const v = Math.round(target * e);
-      if (v !== lastShown && v % 4 === 0) tick2();
-      lastShown = v; scoreNum.textContent = String(v); barFill.style.width = v + "%";
-      if (k >= 1) {
-        clearInterval(iv);
-        const t1 = setTimeout(() => {
-          stamp.classList.remove("pre"); stamp.classList.add("slam");
-          st.classList.add("shake");
-          thump(target >= 85 || sp.mvp);
-          actor.src = art(s.id, finalActor);
-          bubble.classList.remove("pre"); bubble.classList.add("pop");
-          if (target >= 85 || sp.mvp) confetti(canvas, sp.mvp ? 220 : 140);
-        }, 250);
-        sp.timers.push(t1);
+  async function judge(s) {
+    if (S.judging) return;
+    if (!S.sample) { toast("이 화면에서는 Claude를 부를 수 없어요. claude.ai에서 열어 주세요."); return; }
+    try { await loadRows(); } catch (e) { /* 가진 목록으로 진행 */ }
+    const items = answersOf(s.id);
+    if (!items.length) { toast("아직 이 상황에 들어온 답변이 없어요."); renderStage(); return; }
+    S.judging = { total: items.length, done: 0 }; S.sel = null; S.mvp = false; S.note = null;
+    renderStage();
+    let lastErr = null, failed = 0;
+    for (let i = 0; i < items.length; i += BATCH) {
+      const chunk = items.slice(i, i + BATCH);
+      let byId = null;
+      try { byId = await askClaude(s, chunk); }
+      catch (e) {
+        lastErr = e;
+        if (!(e && (e.code === "not_granted" || e.code === "sampling_disabled"))) {
+          try { byId = await askClaude(s, chunk); } catch (e2) { lastErr = e2; }
+        }
       }
-    }, 30);
-    sp.timers.push(iv);
+      chunk.forEach(it => {
+        const x = makeRes(byId && byId.get(it.id));
+        if (x) S.res[it.id] = x; else { S.res[it.id] = { failed: true, score: null }; failed++; }
+      });
+      S.judging.done += chunk.length;
+      const jt = document.getElementById("jText"), jb = document.getElementById("jBar");
+      if (jt) jt.textContent = S.judging.done + " / " + S.judging.total;
+      if (jb) jb.style.width = Math.round(S.judging.done / S.judging.total * 100) + "%";
+    }
+    S.judging = null;
+    S.note = failed ? failed + "개 답변은 채점하지 못했어요. " + sampleMessage(lastErr) : null;
+    if (S.view === "stage" && S.cur === s) {
+      renderStage();
+      const r = document.querySelector(".results");
+      if (r) r.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+    }
   }
   async function rejudge(r) {
-    const sp = S.spot; const s = scen(r.sid) || S.cur;
+    const s = scen(r.sid) || S.cur;
     if (!S.sample) { toast("이 화면에서는 Claude를 부를 수 없어요."); return; }
-    sp.busy = true; renderSpot();
-    let stage = "claude";
+    S.busy = true; S.played = S.sel; renderStage();
     try {
       const byId = await askClaude(s, [r]);
-      if (!applyResult(r, byId.get(r.id))) throw { code: "invalid_json" };
-      stage = "sheet";
-      await writeReaction(r); r.writeFailed = false;
-      toast("새 점수를 시트에 기록했어요. 신입 휴대폰에도 곧 보여요.");
-    } catch (e) {
-      toast(stage === "sheet" ? connectorMessage(e)[0] : sampleMessage(e));
-    } finally { if (S.spot === sp) { sp.busy = false; sp.played = null; renderSpot(); } }
+      const x = makeRes(byId.get(r.id));
+      if (!x) throw { code: "invalid_json" };
+      S.res[r.id] = x;
+      toast("새 점수가 나왔어요!");
+    } catch (e) { toast(sampleMessage(e)); }
+    finally { S.busy = false; S.played = null; if (S.view === "stage") renderStage(); }
   }
 
   /* ---------- 키보드 ---------- */
   document.addEventListener("keydown", e => {
     if (e.target && /input|textarea|select/i.test(e.target.tagName)) return;
     if (e.key === "f" || e.key === "F") { toggleFs(); return; }
-    if (S.spot) {
-      if (e.key === "Escape") closeSpot();
-      else if (e.key === "ArrowLeft") go(-1);
-      else if (e.key === "ArrowRight") go(1);
+    if (S.view !== "stage" || S.judging) return;
+    if (S.sel) {
+      const i = S.list.findIndex(r => r.id === S.sel);
+      if (e.key === "Escape") backToQuestion();
+      else if (e.key === "ArrowLeft" && i > 0) pick(S.list[i - 1]);
+      else if (e.key === "ArrowRight" && i < S.list.length - 1) pick(S.list[i + 1]);
       return;
     }
-    if (e.key === " " && S.view === "stage" && S.round) {
-      e.preventDefault();
-      if (S.round.state === "ready" && counts(S.cur.id).pend) judge(S.cur);
-    }
+    if (e.key === " ") { e.preventDefault(); judge(S.cur); }
   });
 
   /* ---------- 시작 ---------- */
