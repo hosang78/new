@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3c6b">
+<title>내가 그리는 수협의 미래</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="css/draw.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- 1. 시작 -->
+  <section class="screen intro" id="intro" aria-labelledby="introTitle">
+    <a class="home" href="index.html" aria-label="메인으로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <div class="sea" aria-hidden="true">
+      <div class="sun"></div>
+      <svg class="boat" viewBox="0 0 120 80"><path d="M10 52h100l-14 18H24z" fill="#f08a4b" stroke="#1d2b45" stroke-width="4" stroke-linejoin="round"/><rect x="44" y="26" width="34" height="26" rx="4" fill="#fffdf7" stroke="#1d2b45" stroke-width="4"/><rect x="51" y="33" width="8" height="8" rx="2" fill="#5ab4e5"/><rect x="63" y="33" width="8" height="8" rx="2" fill="#5ab4e5"/><path d="M61 26V8" stroke="#1d2b45" stroke-width="4" stroke-linecap="round"/><path d="M61 9l16 6-16 6" fill="#2f7f86" stroke="#1d2b45" stroke-width="3" stroke-linejoin="round"/></svg>
+      <svg class="fish f1" viewBox="0 0 60 34"><path d="M6 17C14 4 34 2 44 17 34 32 14 30 6 17z" fill="#ffd166" stroke="#1d2b45" stroke-width="3.5"/><path d="M44 17l12-10v20z" fill="#ffd166" stroke="#1d2b45" stroke-width="3.5" stroke-linejoin="round"/><circle cx="17" cy="14" r="3" fill="#1d2b45"/></svg>
+      <svg class="fish f2" viewBox="0 0 60 34"><path d="M6 17C14 4 34 2 44 17 34 32 14 30 6 17z" fill="#f4a3c0" stroke="#1d2b45" stroke-width="3.5"/><path d="M44 17l12-10v20z" fill="#f4a3c0" stroke="#1d2b45" stroke-width="3.5" stroke-linejoin="round"/><circle cx="17" cy="14" r="3" fill="#1d2b45"/></svg>
+      <div class="wave w1"></div><div class="wave w2"></div><div class="wave w3"></div>
+      <i class="bubble b1"></i><i class="bubble b2"></i><i class="bubble b3"></i>
+    </div>
+    <div class="intro-copy">
+      <p class="eyebrow">AI 시연 교육 · 그림 그리기</p>
+      <h1 id="introTitle">내가 그리는<br><em>수협의 미래</em></h1>
+      <p class="lead">10년 뒤 바다와 어촌, 그리고 수협은 어떤 모습일까요?<br>손가락으로 자유롭게 그려 주세요. 잘 그리지 않아도 괜찮아요.</p>
+      <ol class="steps">
+        <li><b>1</b>그리기</li>
+        <li><b>2</b>제목 붙이기</li>
+        <li><b>3</b>바다로 보내기</li>
+      </ol>
+      <button class="btn big" id="startBtn" type="button">그리기 시작</button>
+      <p class="fine">익명으로 참여해요 · 한 사람당 한 작품 · <span id="modeNote"></span></p>
+    </div>
+  </section>
+
+  <!-- 2. 그림판 -->
+  <section class="screen board" id="board" hidden aria-label="그림판">
+    <header class="bar">
+      <button class="icon" id="boardBack" type="button" aria-label="처음으로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <h2>수협의 미래를 그려요</h2>
+      <button class="btn done-btn" id="toFinish" type="button">완성</button>
+    </header>
+    <div class="stage" id="stage">
+      <div class="paper" id="paper">
+        <canvas id="cv" aria-label="그림 그리는 곳"></canvas>
+        <div class="hint" id="hint" aria-hidden="true">
+          <svg viewBox="0 0 64 64"><path d="M22 54V24a5 5 0 0 1 10 0v16-24a5 5 0 0 1 10 0v24-14a5 5 0 0 1 10 0v20c0 10-6 16-16 16h-4c-6 0-10-3-14-9L10 40a5 5 0 0 1 8-6z" fill="#fffdf7" stroke="#1d2b45" stroke-width="3.5" stroke-linejoin="round"/></svg>
+          <span>손가락으로 그려 보세요</span>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="swatches" id="swatches" role="radiogroup" aria-label="펜 색상"></div>
+      <div class="tools">
+        <button class="tool" id="penBtn" type="button" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z"/><path d="M14 6l3 3"/></svg><span>펜</span></button>
+        <button class="tool" id="eraserBtn" type="button" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M8 20h12"/><path d="M4 14l9-9 6 6-9 9H8z"/><path d="M9 9l6 6"/></svg><span>지우개</span></button>
+        <button class="tool" id="sizeBtn" type="button" aria-haspopup="true" aria-expanded="false"><i class="dot" id="sizeDot"></i><span>굵기</span></button>
+        <button class="tool" id="undoBtn" type="button"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg><span>되돌리기</span></button>
+        <button class="tool" id="redoBtn" type="button"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg><span>다시하기</span></button>
+        <button class="tool warn" id="clearBtn" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg><span>전체 지우기</span></button>
+      </div>
+      <div class="sizes" id="sizes" hidden role="radiogroup" aria-label="굵기"></div>
+    </div>
+    <div class="sheet-back" id="clearSheet" hidden>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
+        <h3 id="clearTitle">그림을 모두 지울까요?</h3>
+        <p>지운 뒤에도 [되돌리기]로 다시 살릴 수 있어요.</p>
+        <div class="row"><button class="btn ghost" type="button" id="clearNo">취소</button><button class="btn danger" type="button" id="clearYes">모두 지우기</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. 제목·설명 -->
+  <section class="screen finish" id="finish" hidden aria-labelledby="finishTitle">
+    <header class="bar">
+      <button class="icon" id="finishBack" type="button" aria-label="그림판으로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <h2 id="finishTitle">작품에 이름을 붙여요</h2>
+      <span></span>
+    </header>
+    <form class="finish-body" id="form" novalidate>
+      <div class="frame"><img id="preview" alt="내가 그린 그림 미리보기"></div>
+      <label for="title">작품 제목 <em>필수</em></label>
+      <input id="title" name="title" maxlength="30" autocomplete="off" placeholder="예: 바다 위를 나는 스마트 어선" required>
+      <div class="count"><span id="titleCount">0</span>/30</div>
+      <label for="desc">어떤 미래인가요? <small>선택</small></label>
+      <textarea id="desc" name="desc" maxlength="200" rows="4" placeholder="누가, 어디에서, 무엇을 하고 있나요? 그림에 담은 미래를 한두 문장으로 알려 주세요."></textarea>
+      <div class="count"><span id="descCount">0</span>/200</div>
+      <p class="err" id="formErr" role="alert"></p>
+      <button class="btn big" type="submit" id="submitBtn">바다로 보내기 (제출)</button>
+      <button class="btn ghost" type="button" id="moreDraw">조금 더 그릴래요</button>
+      <p class="fine">제출하면 수정할 수 없어요. 그림과 그린 순서가 교육용 드라이브에 저장됩니다.</p>
+    </form>
+  </section>
+
+  <!-- 4. 보내는 중 -->
+  <section class="screen sending" id="sending" hidden aria-live="polite">
+    <div class="voyage" aria-hidden="true">
+      <div class="bottle"><img id="bottleImg" alt=""><i class="cork"></i></div>
+      <div class="wave w1"></div><div class="wave w2"></div>
+    </div>
+    <h2 id="sendTitle">바다로 띄워 보내는 중…</h2>
+    <p id="sendMsg">잠시만 기다려 주세요. 창을 닫지 마세요.</p>
+    <div class="send-actions" id="sendActions" hidden>
+      <button class="btn big" type="button" id="retryBtn">다시 보내기</button>
+      <button class="btn ghost" type="button" id="backToFinish">돌아가기</button>
+    </div>
+  </section>
+
+  <!-- 5. 완료 -->
+  <section class="screen done" id="done" hidden aria-labelledby="doneTitle">
+    <canvas class="party" id="party" aria-hidden="true"></canvas>
+    <div class="done-body">
+      <div class="trophy">
+        <div class="polaroid"><img id="doneImg" alt="제출한 그림"><span id="doneName"></span></div>
+        <div class="seal" id="seal"><small>작품번호</small><b id="doneId">SF-0000</b><span>도착 완료</span></div>
+      </div>
+      <h2 id="doneTitle">수협의 미래가<br>무사히 도착했어요!</h2>
+      <p id="doneMsg">멋진 상상 고마워요. 곧 AI가 이 그림을 완성 작품으로 바꿔 줄 거예요.</p>
+      <a class="btn big" href="index.html">메인으로</a>
+      <button class="btn ghost" type="button" id="demoReset" hidden>데모: 새로 그려 보기</button>
+    </div>
+  </section>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/scenarios.js"></script>
+<script src="js/api.js"></script>
+<script src="js/draw.js"></script>
+</body>
+</html>
