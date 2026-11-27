@@ -36,6 +36,7 @@
       </ol>
       <button class="btn big" id="startBtn" type="button">그리기 시작</button>
       <p class="fine">익명으로 참여해요 · 한 사람당 한 작품 · <span id="modeNote"></span></p>
+      <nav class="pages" data-pages hidden aria-label="결과 화면 보기"><p>결과 화면 보기</p><div class="nums"></div></nav>
     </div>
   </section>
 
@@ -128,6 +129,22 @@
       <p id="doneMsg">멋진 상상 고마워요. 곧 AI가 이 그림을 완성 작품으로 바꿔 줄 거예요.</p>
       <a class="btn big" href="index.html">메인으로</a>
       <button class="btn ghost" type="button" id="demoReset" hidden>데모: 새로 그려 보기</button>
+      <nav class="pages" data-pages hidden aria-label="결과 화면 보기"><p>결과 화면 보기</p><div class="nums"></div></nav>
+    </div>
+  </section>
+
+  <!-- 결과 화면(HTML) 보기 -->
+  <section class="viewer" id="viewer" hidden aria-labelledby="viewerTitle">
+    <header class="bar">
+      <button class="icon" id="viewerClose" type="button" aria-label="닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <h2 id="viewerTitle">결과 보기</h2>
+      <span class="viewer-no" id="viewerNo"></span>
+    </header>
+    <div class="viewer-body">
+      <p class="viewer-msg" id="viewerMsg">불러오는 중…</p>
+      <iframe id="viewerFrame" title="결과 화면" sandbox="allow-scripts allow-popups allow-forms allow-modals" hidden></iframe>
     </div>
   </section>
 </div>

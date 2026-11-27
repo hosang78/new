@@ -51,14 +51,14 @@ img { display: block; max-width: 100%; }
 .fine { margin: 10px 0 0; text-align: center; font-size: 12.5px; color: var(--muted); }
 
 /* ---------- 1. 시작 ---------- */
-.intro { background: linear-gradient(#cfeaf7 0%, #e9f6fc 38%, var(--paper) 38.1%); overflow-y: auto; }
+.intro { background: var(--paper); overflow-y: auto; }
 .home {
   position: absolute; z-index: 3; top: calc(12px + var(--safe-t)); left: 12px;
   width: 42px; height: 42px; display: grid; place-items: center; color: var(--ink);
   background: var(--card); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 2px 0 var(--ink);
 }
 .home svg { width: 20px; height: 20px; }
-.sea { position: relative; flex: none; height: 38vh; min-height: 220px; max-height: 330px; overflow: hidden; }
+.sea { position: relative; flex: none; height: 38vh; min-height: 220px; max-height: 330px; overflow: hidden; background: linear-gradient(#cfeaf7, #e9f6fc); }
 .sun { position: absolute; right: 14%; top: 18%; width: 68px; height: 68px; border-radius: 50%; background: var(--sun); border: 3px solid var(--ink); box-shadow: 0 0 0 10px #ffd16655; animation: sun 4s ease-in-out infinite; }
 @keyframes sun { 50% { box-shadow: 0 0 0 18px #ffd16633; } }
 .wave { position: absolute; left: -50%; width: 200%; height: 46%; bottom: 0; border-top: 3px solid var(--ink);
@@ -182,3 +182,20 @@ img { display: block; max-width: 100%; }
   .fish { opacity: 1; }
 }
 .finish-body textarea { min-height: 116px; }
+
+/* ---------- 결과 화면 번호 버튼 · 보기 ---------- */
+.pages { margin-top: 14px; padding-top: 12px; border-top: 2px dashed #1d2b4533; display: grid; gap: 8px; justify-items: center; }
+.pages p { margin: 0; font-size: 14px; font-weight: 900; color: var(--tangerine); letter-spacing: .02em; }
+.pages .nums { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.pages .nums button {
+  width: 52px; height: 52px; border-radius: 50%; cursor: pointer;
+  border: 2px solid var(--ink); background: var(--tangerine); box-shadow: 0 3px 0 var(--ink);
+  font-size: 20px; font-weight: 900; color: #fff;
+}
+.pages .nums button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.viewer { position: fixed; inset: 0; z-index: 30; display: flex; flex-direction: column; background: var(--paper); padding-top: var(--safe-t); padding-bottom: var(--safe-b); animation: screenIn .3s ease both; }
+.viewer-no { flex: none; min-width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: var(--tangerine); color: #fff; border: 2px solid var(--ink); font-weight: 900; }
+.viewer-body { position: relative; flex: 1; min-height: 0; background: #fff; }
+.viewer-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+.viewer-msg { margin: 0; padding: 40px 20px; text-align: center; color: var(--ink-2); }
+.btn.big.closed { background: var(--muted); }

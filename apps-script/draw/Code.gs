@@ -14,6 +14,13 @@
  *     → 실행 로그에 폴더 주소가 나옵니다.
  *  3. 배포 → 새 배포 → 웹 앱 / 실행: 나 / 액세스: 모든 사용자 → 배포
  *  4. 웹 앱 주소(…/exec)를 GitHub 저장소 js/config.js 의 DRAW_API_URL 에 넣기
+ *  5. 관리자 비밀번호: 프로젝트 설정(⚙) → 스크립트 속성 → 속성 추가
+ *       속성 ADMIN_PASSWORD / 값: 관리자 비밀번호 (AI 상황극 시트의 비밀번호와 같게 하면 한 번에 로그인됩니다)
+ *
+ * 관리자 기능 (메인 화면 관리자 페이지에서 사용)
+ *  - 제출 마감/열기 (LOCKED 스크립트 속성)
+ *  - 결과 HTML 등록: 1, 2, 3 … 번호별로 HTML 파일을 올리면 참여자 화면 하단에 번호 버튼이 생깁니다.
+ *    파일은 저장 폴더 안 html/ 에 page-1.html 처럼 보관됩니다.
  *
  * 드라이브 구조
  *  수협의 미래 그림 (신입 AI 교육)/
@@ -29,6 +36,10 @@
 
 const ROOT_NAME = '수협의 미래 그림 (신입 AI 교육)';
 const ART_FOLDER = 'artworks';
+const HTML_FOLDER = 'html';
+const MAX_HTML_CHARS = 15 * 1024 * 1024;
+const MAX_PAGES = 30;
+const TOKEN_DAYS = 30;
 const INDEX_NAME = '작품목록_index';
 const README_NAME = 'README_저장구조.md';
 const ID_PREFIX = 'SF';
@@ -135,7 +146,9 @@ function writeReadme_(root) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
   try {
-    if (p.action === 'status') return json_({ ok: true, result: deviceStatus_(String(p.deviceId || '')) });
+    if (p.action === 'status') return json_({ ok: true, locked: isLocked_(), result: deviceStatus_(String(p.deviceId || '')) });
+    if (p.action === 'pages') return json_({ ok: true, locked: isLocked_(), pages: listPages_() });
+    if (p.action === 'page') return json_(getPage_(Number(p.no)));
     return json_({ ok: true, message: '수협의 미래 그림 저장소 작동 중' });
   } catch (err) {
     return json_({ ok: false, error: 'server', message: String(err && err.message || err) });
@@ -145,7 +158,24 @@ function doGet(e) {
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    if (body.action === 'submit') return json_(submit_(body));
+    switch (body.action) {
+      case 'submit':
+        if (isLocked_()) return json_({ ok: false, error: 'locked', message: '제출이 마감되었습니다.' });
+        return json_(submit_(body));
+      case 'admin_login': return json_(adminLogin_(body.password));
+      case 'admin_logout': removeToken_(body.token); return json_({ ok: true });
+    }
+    if (String(body.action || '').indexOf('admin_') === 0) {
+      if (!checkToken_(body.token)) return json_({ ok: false, error: 'auth', message: '다시 로그인해 주세요.' });
+      switch (body.action) {
+        case 'admin_info': return json_({ ok: true, locked: isLocked_(), count: countDone_(), pages: listPages_() });
+        case 'admin_lock':
+          PropertiesService.getScriptProperties().setProperty('LOCKED', body.locked ? 'Y' : 'N');
+          return json_({ ok: true, locked: isLocked_() });
+        case 'admin_page_put': return json_(putPage_(body));
+        case 'admin_page_delete': return json_(deletePage_(Number(body.no)));
+      }
+    }
     return json_({ ok: false, error: 'unknown', message: '알 수 없는 요청' });
   } catch (err) {
     return json_({ ok: false, error: 'server', message: String(err && err.message || err) });
@@ -251,6 +281,116 @@ function submit_(b) {
     sh.getRange(row, COL.status).setValue('실패');
     return { ok: false, error: 'save_failed', message: '드라이브 저장에 실패했습니다. 다시 시도해 주세요.', id };
   }
+}
+
+/* ---------------- 제출 마감 · 관리자 ---------------- */
+function isLocked_() { return PropertiesService.getScriptProperties().getProperty('LOCKED') === 'Y'; }
+
+function countDone_() {
+  const sh = indexSheet_(rootFolder_(false));
+  if (sh.getLastRow() < 2) return 0;
+  return sh.getRange(2, COL.status, sh.getLastRow() - 1, 1).getValues().filter(r => r[0] === '완료').length;
+}
+
+function hash_(s) {
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(s), Utilities.Charset.UTF_8));
+}
+function adminPassword_() { return String(PropertiesService.getScriptProperties().getProperty('ADMIN_PASSWORD') || ''); }
+
+function adminLogin_(password) {
+  const cache = CacheService.getScriptCache();
+  const fails = Number(cache.get('adminFails') || 0);
+  if (fails >= 5) return { ok: false, error: 'wait', message: '비밀번호를 여러 번 틀렸습니다. 5분 뒤 다시 시도하세요.' };
+  const real = adminPassword_();
+  if (!real) return { ok: false, error: 'nopassword', message: "그림 저장 Apps Script의 스크립트 속성에 ADMIN_PASSWORD를 먼저 등록해 주세요." };
+  if (String(password || '') !== real) {
+    cache.put('adminFails', String(fails + 1), 300);
+    return { ok: false, error: 'wrong', message: '비밀번호가 맞지 않습니다.' };
+  }
+  cache.remove('adminFails');
+  const token = Utilities.getUuid() + Utilities.getUuid().slice(0, 8);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const tokens = loadTokens_();
+    tokens[hash_(token)] = { exp: Date.now() + TOKEN_DAYS * 86400000, pw: hash_(real) };
+    saveTokens_(tokens);
+  } finally { lock.releaseLock(); }
+  return { ok: true, token: token };
+}
+function checkToken_(token) {
+  if (!token) return false;
+  const t = loadTokens_()[hash_(token)];
+  return !!(t && t.exp > Date.now() && t.pw === hash_(adminPassword_()));
+}
+function removeToken_(token) {
+  if (!token) return;
+  const tokens = loadTokens_(); delete tokens[hash_(token)]; saveTokens_(tokens);
+}
+function loadTokens_() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('ADMIN_TOKENS') || '{}'); } catch (e) { return {}; }
+}
+function saveTokens_(tokens) {
+  const now = Date.now(), out = {};
+  Object.keys(tokens).filter(k => tokens[k].exp > now).sort((a, b) => tokens[b].exp - tokens[a].exp).slice(0, 30).forEach(k => { out[k] = tokens[k]; });
+  PropertiesService.getScriptProperties().setProperty('ADMIN_TOKENS', JSON.stringify(out));
+}
+
+/* ---------------- 결과 HTML (번호별) ---------------- */
+function pagesMeta_() {
+  try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('PAGES') || '{}'); } catch (e) { return {}; }
+}
+function savePagesMeta_(m) { PropertiesService.getScriptProperties().setProperty('PAGES', JSON.stringify(m)); }
+function htmlFolder_() {
+  const root = rootFolder_(false);
+  const it = root.getFoldersByName(HTML_FOLDER);
+  return it.hasNext() ? it.next() : root.createFolder(HTML_FOLDER);
+}
+function listPages_() {
+  const m = pagesMeta_();
+  return Object.keys(m).map(Number).sort((a, b) => a - b).map(no => ({ no, title: m[no].title || '', name: m[no].name || '', size: m[no].size || 0, updatedAt: m[no].updatedAt || '' }));
+}
+function getPage_(no) {
+  const m = pagesMeta_()[no];
+  if (!m) return { ok: false, error: 'not_found', message: '등록된 화면이 없습니다.' };
+  try {
+    const html = DriveApp.getFileById(m.fileId).getBlob().getDataAsString('UTF-8');
+    return { ok: true, no, title: m.title || '', html };
+  } catch (e) {
+    return { ok: false, error: 'not_found', message: '파일을 찾을 수 없습니다.' };
+  }
+}
+function putPage_(b) {
+  const no = Math.floor(Number(b.no));
+  if (!(no >= 1 && no <= MAX_PAGES)) return { ok: false, error: 'bad', message: '번호는 1~' + MAX_PAGES + ' 사이여야 합니다.' };
+  const html = String(b.html || '');
+  if (!html.trim()) return { ok: false, error: 'bad', message: 'HTML 내용이 비어 있습니다.' };
+  if (html.length > MAX_HTML_CHARS) return { ok: false, error: 'too_large', message: 'HTML 파일이 너무 큽니다. (15MB 이하)' };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const folder = htmlFolder_();
+    const name = 'page-' + no + '.html';
+    const old = folder.getFilesByName(name);
+    while (old.hasNext()) old.next().setTrashed(true);
+    const file = folder.createFile(Utilities.newBlob(html, 'text/html', name));
+    const m = pagesMeta_();
+    const tz = Session.getScriptTimeZone() || 'Asia/Seoul';
+    const prev = m[no] || {};
+    m[no] = { fileId: file.getId(), name: clean_(b.name, 80) || name, title: clean_(b.title, 40) || prev.title || '', size: html.length,
+      updatedAt: Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm') };
+    savePagesMeta_(m);
+  } finally { lock.releaseLock(); }
+  return { ok: true, pages: listPages_() };
+}
+function deletePage_(no) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const m = pagesMeta_();
+    if (m[no]) { try { DriveApp.getFileById(m[no].fileId).setTrashed(true); } catch (e) {} delete m[no]; savePagesMeta_(m); }
+  } finally { lock.releaseLock(); }
+  return { ok: true, pages: listPages_() };
 }
 
 /* ---------------- 도구 ---------------- */

@@ -316,6 +316,7 @@
       }
       if (j.ok) return j;
       if (j.error === "bad" || j.error === "too_large") throw new Error(j.message || "보낼 수 없는 작품이에요.");
+      if (j.error === "locked") { applyLock(true); throw new Error("제출이 마감됐어요. 진행자에게 문의해 주세요."); }
       last = new Error(j.message || "저장에 실패했어요. [다시 보내기]를 눌러 주세요.");   // busy · save_failed · server → 같은 제출ID로 재시도
     }
     throw last;
@@ -388,9 +389,59 @@
     })(t0);
   }
 
+  /* ---------- 결과 화면(HTML) 번호 버튼 · 제출 마감 ---------- */
+  let locked = false;
+  function applyLock(v) {
+    locked = !!v;
+    const b = $("startBtn");
+    if (locked) { b.textContent = "제출이 마감됐어요"; b.classList.add("closed"); }
+    else { b.textContent = S.all.length ? "이어서 그리기" : "그리기 시작"; b.classList.remove("closed"); }
+  }
+  function renderPages(pages) {
+    document.querySelectorAll("[data-pages]").forEach(nav => {
+      const box = nav.querySelector(".nums"); box.textContent = "";
+      (pages || []).forEach(p => {
+        const b = document.createElement("button");
+        b.type = "button"; b.textContent = String(p.no);
+        b.setAttribute("aria-label", p.no + "번 결과 화면" + (p.title ? ": " + p.title : ""));
+        if (p.title) b.title = p.title;
+        b.addEventListener("click", () => openPage(p.no, p.title));
+        box.appendChild(b);
+      });
+      nav.hidden = !(pages && pages.length);
+    });
+  }
+  async function loadPages() {
+    if (!API_URL) return;
+    try {
+      const r = await fetch(API_URL + "?action=pages&_=" + Date.now(), { redirect: "follow" });
+      const j = await r.json();
+      if (!j.ok) return;
+      renderPages(j.pages);
+      if (!$("intro").hidden || !$("board").hidden) applyLock(j.locked);
+    } catch (e) { /* 버튼 없이 진행 */ }
+  }
+  async function openPage(no, title) {
+    const v = $("viewer"), f = $("viewerFrame"), msg = $("viewerMsg");
+    $("viewerNo").textContent = no; $("viewerTitle").textContent = title || (no + "번 결과 보기");
+    f.hidden = true; f.removeAttribute("srcdoc"); msg.hidden = false; msg.textContent = "불러오는 중…";
+    v.hidden = false;
+    try {
+      const r = await fetch(API_URL + "?action=page&no=" + encodeURIComponent(no) + "&_=" + Date.now(), { redirect: "follow" });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.message || "화면을 불러오지 못했어요.");
+      if (v.hidden) return;
+      if (j.title) $("viewerTitle").textContent = j.title;
+      f.srcdoc = j.html; f.hidden = false; msg.hidden = true;
+    } catch (e) { msg.textContent = (e && e.message) || "화면을 불러오지 못했어요. 잠시 후 다시 눌러 주세요."; }
+  }
+  $("viewerClose").addEventListener("click", () => { $("viewer").hidden = true; $("viewerFrame").removeAttribute("srcdoc"); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("viewer").hidden) $("viewerClose").click(); });
+
   /* ---------- 시작 ---------- */
   $("modeNote").textContent = API_URL ? "드라이브 연결됨" : "데모 모드";
   $("startBtn").addEventListener("click", () => {
+    if (locked) { $("modeNote").textContent = "제출이 마감돼 더 그릴 수 없어요"; return; }
     if (!S.all.length) S.t0 = Date.now();
     show("board");
   });
@@ -405,4 +456,5 @@
     if (S.all.length) $("startBtn").textContent = "이어서 그리기";
     updateTools();
   }
+  loadPages();
 })();
