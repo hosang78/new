@@ -237,14 +237,39 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .stage.mvp .panel { top: 8.4cqi; }
 
 /* ---------- 결과 영역 (무대 아래) ---------- */
-.stage-wrap .stage { width: min(100%, calc((100dvh - 200px) * 16 / 9)); scroll-margin-top: 80px; }
-.results { margin-top: 28px; scroll-margin-top: 70px; }
-.rhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.rhead h2 { margin: 0 8px 0 0; font-family: var(--display); font-weight: 400; font-size: 30px; }
-.rhead .spacer { flex: 1; }
-.results .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-@media (max-width: 1280px) { .results .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .results .cards { grid-template-columns: 1fr; } }
+/* 한 화면 배치: 왼쪽 무대(고정) + 오른쪽 결과 패널(따로 스크롤) */
+body.fit .app { height: 100%; min-height: 0; }
+body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block: 14px; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) clamp(340px, 27vw, 520px); gap: 16px; height: 100%; min-height: 0; }
+.left { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; container-type: size; }
+.left .stage { width: min(100cqw, calc((100cqh - 64px) * 16 / 9)); scroll-margin-top: 76px; }
+.left .controls { min-height: 44px; }
+.right {
+  min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--paper-2); border: 2px solid var(--ink); border-radius: 18px; box-shadow: 0 3px 0 var(--ink);
+}
+.rhead { display: grid; gap: 8px; padding: 14px 16px 12px; border-bottom: 2px solid var(--ink); background: var(--card); }
+.rtitle { display: flex; align-items: center; gap: 8px; }
+.rtitle h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 26px; }
+.rchips, .rbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+.rnote { margin: 0; font-size: 13px; color: #8a3b17; background: #fde7da; border-radius: 10px; padding: 8px 10px; }
+.right .cards { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.right .acard { flex: none; min-height: 96px; padding: 12px 92px 12px 14px; gap: 6px; }
+.right .acard .ans { -webkit-line-clamp: 3; font-size: 14.5px; }
+.right .acard .line { margin-right: -78px; font-size: 13.5px; }
+.right .stamp.mini { width: 70px; right: 10px; top: 8px; }
+.right .stamp.mini b { font-size: 23px; }
+.rempty { flex: 1; display: grid; place-content: center; gap: 8px; text-align: center; padding: 24px; color: var(--ink-2); }
+.rempty b { font-family: var(--display); font-weight: 400; font-size: 24px; color: var(--ink); }
+.rfoot { margin: 0; padding: 8px 12px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); background: var(--card); text-align: center; }
+@media (max-width: 1100px), (max-height: 560px) {
+  body.fit .app { height: auto; min-height: 100%; }
+  body.fit .view { overflow: visible; }
+  .layout { grid-template-columns: 1fr; height: auto; }
+  .left { container-type: inline-size; }
+  .left .stage { width: 100%; }
+  .right { max-height: 80vh; }
+}
 .acard.sel { outline: 4px solid var(--tangerine); outline-offset: 2px; }
 .hint.count { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
@@ -386,6 +411,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   function showError(e, retry) {
     const [t, d] = connectorMessage(e);
     stopTimers();
+    document.body.classList.remove("fit");
     setChildren(view, h("div", { class: "notice" }, h("h2", null, t), h("p", null, d),
       h("div", { class: "row" }, h("button", { class: "btn primary", type: "button", onclick: retry }, "다시 시도"))));
   }
@@ -423,6 +449,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   }
   function renderSelect() {
     stopTimers();
+    document.body.classList.remove("fit");
     S.view = "select"; S.cur = null; S.sel = null; renderLock();
     const cards = S.scenarios.map((s, i) => {
       const rs = answersOf(s.id), st = scoreStats(rs);
@@ -576,28 +603,48 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
         h("p", { class: "ans" }, r.answer),
         x.line ? h("p", { class: "line" }, s.role + ": " + x.line) : null);
     });
-    const results = (judged.length || S.note) ? h("section", { class: "results" },
+    const prevList = document.querySelector(".right .cards");
+    const keepScroll = prevList ? prevList.scrollTop : 0;
+    const aside = h("aside", { class: "right", "aria-label": "채점 결과" },
       h("div", { class: "rhead" },
-        h("h2", null, "채점 결과"),
-        h("span", { class: "chip big" }, "답변 " + judged.length),
-        st2.avg != null ? h("span", { class: "chip big pos" }, "평균 " + st2.avg + "점") : null,
-        st2.best != null ? h("span", { class: "chip big gold" }, "최고 " + st2.best + "점") : null,
-        h("span", { class: "spacer" }),
-        scored.length ? h("button", { class: "btn sm", type: "button", onclick: () => { S.sortByScore = !S.sortByScore; S.played = S.sel; renderStage(); } }, S.sortByScore ? "제출순 보기" : "점수순 보기") : null,
-        mvp ? h("button", { class: "btn sm gold", type: "button", onclick: () => pick(mvp, true) }, "★ MVP 발표") : null),
-      S.note ? h("p", { class: "empty", style: "padding:14px;text-align:left" }, S.note) : null,
-      h("div", { class: "cards" }, cards),
-      judged.length ? h("p", { class: "controls", style: "margin-top:12px" }, h("span", { class: "hint" }, "카드를 누르면 위 화면에서 점수가 올라가고 도장이 쾅! 찍혀요. ← → 로 넘기고 Esc로 질문 화면에 돌아갑니다.")) : null) : null;
+        h("div", { class: "rtitle" }, h("h2", null, "채점 결과"),
+          judged.length ? h("span", { class: "chip" }, judged.length + "개") : null),
+        judged.length ? h("div", { class: "rchips" },
+          st2.avg != null ? h("span", { class: "chip big pos" }, "평균 " + st2.avg + "점") : null,
+          st2.best != null ? h("span", { class: "chip big gold" }, "최고 " + st2.best + "점") : null) : null,
+        scored.length ? h("div", { class: "rbtns" },
+          h("button", { class: "btn sm", type: "button", onclick: () => { S.sortByScore = !S.sortByScore; S.played = S.sel; renderStage(); } }, S.sortByScore ? "제출순 보기" : "점수순 보기"),
+          mvp ? h("button", { class: "btn sm gold", type: "button", onclick: () => pick(mvp, true) }, "★ MVP 발표") : null) : null,
+        S.note ? h("p", { class: "rnote" }, S.note) : null),
+      judged.length
+        ? h("div", { class: "cards", id: "resultCards" }, cards)
+        : h("div", { class: "rempty" },
+            h("b", null, S.judging ? "채점 중이에요…" : "아직 채점 전이에요"),
+            h("span", null, S.judging ? "끝나면 여기에 점수와 도장이 차례로 나와요." : "왼쪽 아래 [★ 채점하기]를 누르면 답변마다 점수와 칭찬 도장이 여기에 나와요.")),
+      judged.length ? h("p", { class: "rfoot" }, "카드를 누르면 왼쪽 화면에서 도장이 쾅! · ← → 이동 · Esc 질문 화면") : null);
 
-    setChildren(view, h("div", { class: "stage-wrap" }, st, controls), results);
+    document.body.classList.add("fit");
+    setChildren(view, h("div", { class: "layout" }, h("div", { class: "left" }, st, controls), aside));
+    const list2 = document.getElementById("resultCards");
+    if (list2) {
+      list2.scrollTop = keepScroll;
+      const sel = list2.querySelector(".acard.sel");
+      if (sel) {
+        const top = sel.offsetTop - list2.offsetTop, bottom = top + sel.offsetHeight;
+        if (top < list2.scrollTop) list2.scrollTop = top - 8;
+        else if (bottom > list2.scrollTop + list2.clientHeight) list2.scrollTop = bottom - list2.clientHeight + 8;
+      }
+    }
     if (view1.run) view1.run();
   }
   function pick(r, mvp) {
     if (!r) return;
     S.sel = r.id; S.mvp = !!mvp; S.played = null;
     renderStage();
-    const el = document.getElementById("stage");
-    if (el) el.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+    if (window.matchMedia && window.matchMedia("(max-width: 1100px), (max-height: 560px)").matches) {
+      const el = document.getElementById("stage");
+      if (el) el.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+    }
   }
   function backToQuestion() { S.sel = null; S.mvp = false; renderStage(); }
   async function poll() {
@@ -762,8 +809,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     S.note = failed ? failed + "개 답변은 채점하지 못했어요. " + sampleMessage(lastErr) : null;
     if (S.view === "stage" && S.cur === s) {
       renderStage();
-      const r = document.querySelector(".results");
-      if (r) r.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      const list = document.getElementById("resultCards"); if (list) list.scrollTop = 0;
     }
   }
   async function rejudge(r) {
