@@ -319,7 +319,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     t.textContent = msg; t.hidden = false;
     clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200);
   }
-  const mmss = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s / 60)).padStart(1, "0") + ":" + String(s % 60).padStart(2, "0"); };
   const nowText = () => {
     const d = new Date(), p = n => String(n).padStart(2, "0");
     return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
@@ -405,7 +404,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     pill.classList.toggle("locked", S.locked);
     document.getElementById("lockText").textContent = S.locked ? "답변 마감" : "답변 받는 중";
     btn.textContent = S.locked ? "제출 열기" : "제출 마감";
-    btn.disabled = S.round && S.round.state !== "ready";
+    btn.disabled = !!(S.round && S.round.state === "judging");
   }
   document.getElementById("lockBtn").addEventListener("click", async e => {
     const b = e.currentTarget; b.disabled = true;
@@ -444,7 +443,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     setChildren(view, 
       h("div", { class: "head" },
         h("div", null, h("h1", null, "오늘 다룰 상황을 고르세요"),
-          h("p", null, "상황을 띄우고 [시작]을 누르면 신입직원 휴대폰에서 답변을 받습니다. [그만 넣으세요]를 누르면 Claude가 답변마다 점수와 칭찬 도장을 줍니다.")),
+          h("p", null, "신입직원은 휴대폰에서 원하는 상황에 자유롭게 답합니다. 상황을 띄우고 [채점하기]를 누르면 Claude가 답변마다 점수와 칭찬 도장을 줍니다. 제출을 막으려면 위쪽 [제출 마감]을 누르세요.")),
         h("button", { class: "btn sm", type: "button", onclick: refreshSelect }, "새로고침")),
       h("div", { class: "scenes" }, cards));
   }
@@ -456,20 +455,30 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   /* ---------- 무대 ---------- */
   function openStage(s) {
     S.cur = s; S.view = "stage";
-    S.round = { sid: s.id, state: "ready", duration: 180, endsAt: 0, startRow: 0, judgedIds: new Set(), total: 0, done: 0 };
+    S.round = { sid: s.id, state: "ready", judgedIds: new Set(), total: 0, done: 0 };
     renderStage();
+    stopTimers();
+    pollT = setInterval(poll, POLL_MS);
   }
   function stageBase(s, actorKey) {
     const st = h("div", { class: "stage", style: "--accent:" + (ACCENT[s.id] || "#efbf87") },
       img(art(s.id, "background"), "bg"), h("div", { class: "shade" }), img(art(s.id, actorKey || "idle"), "actor", s.role));
     return st;
   }
-  let tickT = null, pollT = null, polling = false;
-  function stopTimers() { clearInterval(tickT); clearInterval(pollT); tickT = pollT = null; }
+  let pollT = null, polling = false;
+  function stopTimers() { clearInterval(pollT); pollT = null; }
+  const counts = sid => {
+    const rs = S.rows.filter(r => r.sid === sid);
+    return { total: rs.length, pend: rs.filter(r => !r.reaction).length, judged: rs.filter(r => r.reaction).length };
+  };
+  function countNode(c) {
+    return [h("div", { class: "t" }, String(c.pend)), h("div", { class: "n" }, "채점 대기 답변 · 전체 ", h("b", null, String(c.total)), "개")];
+  }
 
   function renderStage() {
     const s = S.cur, R = S.round;
     renderLock();
+    const c = counts(s.id);
     const st = stageBase(s, "idle");
     st.append(
       h("div", { class: "copy" },
@@ -478,77 +487,39 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
         h("p", { class: "sit" }, s.situation),
         h("div", { class: "bubble" }, h("div", { class: "who" }, h("i"), s.role), s.line),
         h("p", { class: "q" }, h("span", null, "질문"), s.question)),
-      h("div", { class: "rookie" }, img(rookie(R.state === "open" ? "typing" : R.state === "judging" ? "submitted" : "idle"), "", "신입직원")),
-      h("div", { class: "clock" },
-        h("div", { class: "t", id: "clockT" }, mmss(R.state === "open" ? (R.endsAt - Date.now()) / 1000 : R.duration)),
-        h("div", { class: "n", id: "clockN" }, R.state === "open" ? arrivalsNode() : "제한 시간")));
+      h("div", { class: "rookie" }, img(rookie(R.state === "judging" ? "submitted" : "typing"), "", "신입직원")),
+      h("div", { class: "clock", id: "countBox" }, countNode(c)));
     if (R.state === "judging") {
       st.append(h("div", { class: "judging" }, h("div", null,
         h("b", null, "Claude 심사위원이 채점 중…"),
         h("span", { id: "jText" }, R.done + " / " + R.total),
         h("div", { class: "meter" }, h("i", { id: "jBar", style: "width:" + (R.total ? Math.round(R.done / R.total * 100) : 0) + "%" })))));
     }
-
-    const pend = S.rows.filter(r => r.sid === s.id && !r.reaction).length;
-    let controls;
-    if (R.state === "ready") {
-      controls = h("div", { class: "controls" },
-        h("button", { class: "btn", type: "button", onclick: renderSelect }, "← 상황 목록"),
-        h("button", { class: "btn sm", type: "button", onclick: () => { R.duration = Math.max(30, R.duration - 30); renderStage(); } }, "−30초"),
-        h("button", { class: "btn sm", type: "button", onclick: () => { R.duration = Math.min(900, R.duration + 30); renderStage(); } }, "+30초"),
-        h("button", { class: "btn primary", type: "button", id: "startBtn", onclick: startRound }, "▶ 시작 (답변 받기)"),
-        pend ? h("button", { class: "btn", type: "button", onclick: () => judge(s) }, "채점 대기 " + pend + "개 바로 채점") : null,
-        h("span", { class: "hint" }, "Space: 시작 · F: 전체화면"));
-    } else if (R.state === "open") {
-      controls = h("div", { class: "controls" },
-        h("button", { class: "btn sm", type: "button", onclick: () => { R.endsAt += 30000; tick(); } }, "+30초"),
-        h("button", { class: "btn danger", type: "button", id: "stopBtn", onclick: stopRound }, "■ 그만 넣으세요 (마감하고 채점)"),
-        h("span", { class: "hint" }, "Space: 마감"));
-    } else {
-      controls = h("div", { class: "controls" }, h("span", { class: "hint" }, "채점이 끝나면 결과 화면으로 넘어갑니다."));
-    }
+    const controls = R.state === "judging"
+      ? h("div", { class: "controls" }, h("span", { class: "hint" }, "채점이 끝나면 결과 화면으로 넘어갑니다."))
+      : h("div", { class: "controls" },
+          h("button", { class: "btn", type: "button", onclick: renderSelect }, "← 상황 목록"),
+          h("button", { class: "btn primary", type: "button", id: "judgeBtn", disabled: !c.pend, onclick: () => judge(s) },
+            c.pend ? "★ 채점하기 (" + c.pend + "개)" : "채점할 새 답변 없음"),
+          c.judged ? h("button", { class: "btn", type: "button", onclick: () => { S.round.judgedIds = new Set(); renderResults(s, null); } }, "채점 결과 보기 (" + c.judged + "개)") : null,
+          h("span", { class: "hint" }, "답변 수는 3초마다 새로 고쳐져요 · Space: 채점 · F: 전체화면"));
     setChildren(view, h("div", { class: "stage-wrap" }, st, controls));
   }
-  function arrivals() {
-    const R = S.round;
-    return S.rows.filter(r => r.sid === R.sid && r.row > R.startRow).length;
-  }
-  function arrivalsNode() { return h("span", null, "도착한 답변 ", h("b", null, String(arrivals())), "개"); }
-  function tick() {
-    const R = S.round; if (!R || R.state !== "open") return;
-    const left = (R.endsAt - Date.now()) / 1000;
-    const t = document.getElementById("clockT");
-    if (t) { t.textContent = left > 0 ? mmss(left) : "시간 종료"; t.classList.toggle("over", left <= 0); }
-  }
   async function poll() {
-    if (polling || !S.round || S.round.state !== "open") return;
+    if (polling || S.view !== "stage" || !S.round || S.round.state !== "ready") return;
     polling = true;
-    try { await loadRows(); const n = document.getElementById("clockN"); if (n) n.replaceChildren(arrivalsNode()); }
-    catch (e) { /* 다음 주기에 다시 */ }
-    finally { polling = false; }
-  }
-  async function startRound() {
-    const R = S.round, b = document.getElementById("startBtn");
-    if (b) { b.disabled = true; b.textContent = "여는 중…"; }
     try {
+      const before = counts(S.cur.id);
       await loadRows();
-      R.startRow = S.rows.reduce((m, r) => Math.max(m, r.row), 1);
-      await setLock(false);
-      R.state = "open"; R.endsAt = Date.now() + R.duration * 1000;
-      renderStage();
-      tickT = setInterval(tick, 250);
-      pollT = setInterval(poll, POLL_MS);
-      toast("답변 제출을 열었어요. 신입직원 휴대폰에서 답변할 수 있어요.");
-    } catch (e) { toast(connectorMessage(e)[0]); R.state = "ready"; renderStage(); }
-  }
-  async function stopRound() {
-    const b = document.getElementById("stopBtn");
-    if (b) { b.disabled = true; b.textContent = "마감하는 중…"; }
-    stopTimers();
-    try { await setLock(true); }
-    catch (e) { toast(connectorMessage(e)[0] + " (마감 실패)"); S.round.state = "open"; renderStage(); tickT = setInterval(tick, 250); pollT = setInterval(poll, POLL_MS); return; }
-    try { await loadRows(); } catch (e) { /* 마지막 목록으로 진행 */ }
-    judge(S.cur);
+      const after = counts(S.cur.id);
+      if (S.view !== "stage" || S.round.state !== "ready") return;
+      if (before.pend !== after.pend || before.total !== after.total || before.judged !== after.judged) {
+        const box = document.getElementById("countBox"); if (box) setChildren(box, countNode(after));
+        const b = document.getElementById("judgeBtn");
+        if (b) { b.disabled = !after.pend; b.textContent = after.pend ? "★ 채점하기 (" + after.pend + "개)" : "채점할 새 답변 없음"; }
+      }
+    } catch (e) { /* 다음 주기에 다시 */ }
+    finally { polling = false; }
   }
 
   /* ---------- Claude 채점 ---------- */
@@ -845,7 +816,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
     }
     if (e.key === " " && S.view === "stage" && S.round) {
       e.preventDefault();
-      if (S.round.state === "ready") startRound(); else if (S.round.state === "open") stopRound();
+      if (S.round.state === "ready" && counts(S.cur.id).pend) judge(S.cur);
     }
   });
 
