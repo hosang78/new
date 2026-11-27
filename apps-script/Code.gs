@@ -1,3 +1,4 @@
+/** @OnlyCurrentDoc */
 /**
  * 슬기로운 신입생활 : AI 상황극 — 구글 시트 연동 (Apps Script)
  *
