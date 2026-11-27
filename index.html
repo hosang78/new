@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f3ead8">
+<title>슬기로운 신입생활</title>
+<meta name="description" content="신입직원 교육 메뉴 — AI 상황극">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="home-header">
+  <div class="wrap hero">
+    <div class="hero-copy">
+      <p class="eyebrow">신입직원 교육</p>
+      <h1>슬기로운<br><em>신입생활</em></h1>
+      <p>오늘 함께할 메뉴를 골라 주세요.</p>
+    </div>
+    <img class="hero-rookie" src="assets/mobile/rookie/idle.gif" width="320" height="384" alt="">
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="section-title">
+    <h2>메뉴</h2>
+    <span id="menu-count"></span>
+  </div>
+  <ul class="menu-grid" id="menu-grid"></ul>
+</main>
+
+<footer class="foot">
+  <span class="chip" id="anon-code">익명 참여</span>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/scenarios.js"></script>
+<script src="js/api.js"></script>
+<script>
+(function () {
+  const menus = (window.APP_CONFIG.MENUS || []);
+  const grid = document.getElementById('menu-grid');
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function art(m) {
+    if (m.status !== 'open') return '<div class="menu-art" aria-hidden="true"><span>✦</span></div>';
+    if (m.art === 'trio') {
+      return '<div class="menu-art"><span class="tag">' + esc(m.badge) + '</span><div class="trio">' +
+        ['customer', 'manager', 'colleague'].map(id =>
+          '<img src="assets/mobile/' + id + '/idle.gif" width="320" height="384" alt="" loading="lazy">').join('') +
+        '</div></div>';
+    }
+    if (m.image) return '<div class="menu-art"><span class="tag">' + esc(m.badge) + '</span><img src="' + esc(m.image) + '" alt="" style="width:100%;height:100%;object-fit:cover"></div>';
+    return '<div class="menu-art"><span class="tag">' + esc(m.badge) + '</span></div>';
+  }
+
+  grid.innerHTML = menus.map(m => {
+    const body = art(m) + '<div class="menu-body"><h3>' + esc(m.title) + '</h3><p>' + esc(m.desc) + '</p>' +
+      '<span class="menu-go">' + (m.status === 'open' ? '시작하기 →' : '준비 중') + '</span></div>';
+    return m.status === 'open'
+      ? '<li><a class="menu-card" href="' + esc(m.href) + '">' + body + '</a></li>'
+      : '<li><div class="menu-card soon" aria-disabled="true">' + body + '</div></li>';
+  }).join('');
+
+  const open = menus.filter(m => m.status === 'open').length;
+  document.getElementById('menu-count').textContent = '참여 가능 ' + open + '개';
+  document.getElementById('anon-code').textContent = '익명 참여 · ' + API.participantId();
+})();
+</script>
+</body>
+</html>
