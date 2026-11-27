@@ -45,7 +45,14 @@ img { max-width: 100%; }
   background: var(--paper); border-bottom: 2px solid var(--ink);
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
-.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; margin-right: auto; }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-right: auto; padding: 3px; border: 2px solid var(--ink); border-radius: 12px; background: var(--paper-2); }
+.tabs button { border: 0; background: transparent; border-radius: 8px; padding: 5px 12px; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.tabs button:hover { background: var(--card); }
+.tabs button[aria-current="true"] { background: var(--ink); color: var(--paper); }
+.tabs button[disabled] { opacity: .45; cursor: default; }
+.tabs button small { font-family: var(--display); font-size: 13px; margin-right: 4px; opacity: .7; }
+.bar .brand + .tabs[hidden] + * { margin-left: auto; }
 .brand b { font-family: var(--display); font-weight: 400; font-size: 22px; letter-spacing: -.02em; white-space: nowrap; }
 .brand span { color: var(--muted); font-size: 13px; white-space: nowrap; }
 .pill {
@@ -278,6 +285,7 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
 <div class="app">
   <header class="bar">
     <div class="brand"><b>슬기로운 신입생활 : AI 상황극</b><span>진행자 화면</span></div>
+    <nav class="tabs" id="sceneNav" aria-label="상황 이동" hidden></nav>
     <span class="pill" id="lockPill" hidden><i></i><span id="lockText"></span></span>
     <button class="btn sm" id="lockBtn" type="button" hidden></button>
     <a class="btn sm ghost" id="sheetLink" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1_nvoC-qOMFzKwuQezdI-QTks43wJRtqvG_0H7L3fBUM/edit">구글 시트 열기</a>
@@ -417,7 +425,20 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
   }
 
   /* ---------- 상단 잠금 표시 ---------- */
+  function renderNav() {
+    const nav = document.getElementById("sceneNav");
+    if (!nav) return;
+    nav.hidden = S.view === "loading";
+    const busy = !!S.judging;
+    setChildren(nav,
+      h("button", { type: "button", "aria-current": S.view === "select" ? "true" : "false", disabled: busy, onclick: renderSelect }, "상황 목록"),
+      S.scenarios.map((sc, i) => h("button", {
+        type: "button", "aria-current": S.view === "stage" && S.cur === sc ? "true" : "false", disabled: busy,
+        onclick: () => { if (!(S.view === "stage" && S.cur === sc)) openStage(sc); }
+      }, h("small", null, String(i + 1).padStart(2, "0")), sc.title)));
+  }
   function renderLock() {
+    renderNav();
     const pill = document.getElementById("lockPill"), btn = document.getElementById("lockBtn");
     if (S.locked == null) { pill.hidden = btn.hidden = true; return; }
     pill.hidden = btn.hidden = false;
@@ -580,6 +601,7 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
       ? h("div", { class: "controls" }, h("span", { class: "hint" }, "채점이 끝나면 아래에 결과 카드가 나옵니다."))
       : selR
         ? h("div", { class: "controls" },
+            h("button", { class: "btn sm", type: "button", onclick: renderSelect }, "☰ 상황 목록"),
             h("button", { class: "btn sm", type: "button", disabled: idx <= 0, onclick: () => pick(list[idx - 1]) }, "← 이전"),
             h("span", { class: "hint count" }, (idx + 1) + " / " + list.length),
             h("button", { class: "btn sm", type: "button", disabled: idx >= list.length - 1, onclick: () => pick(list[idx + 1]) }, "다음 →"),
