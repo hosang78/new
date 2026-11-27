@@ -12,7 +12,7 @@
 window.APP_CONFIG = {
   API_URL: 'https://script.google.com/macros/s/AKfycbzOBZqMMyR-nVOGu1NKP-vl9V7UktMqSDc4XyWUyCHF9jC0t0hzKYXYyRmMNNp2vF-l/exec',
 
-  DRAW_API_URL: '',
+  DRAW_API_URL: 'https://script.google.com/macros/s/AKfycbzliHfTOk9uUoLYARKzr_-iu8m8xVaxi450AlpQeluIxeFDh4fq85ThcHdgJ5KO0hgnoA/exec',
 
   // 답변 제출 후 AI 반응(시트의 AI반응/AI대사 칸)을 확인하는 주기
   POLL_INTERVAL_MS: 5000,
