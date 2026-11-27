@@ -239,6 +239,18 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .bubble.pop { animation: pop .4s ease both; }
 @keyframes pop { 0% { transform: scale(.85); opacity: 0; } 70% { transform: scale(1.03); opacity: 1; } 100% { transform: scale(1); } }
 .confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.result-emblem {
+  position: absolute; right: 1.6cqi; top: 1.6cqi; z-index: 2;
+  width: 12.5cqi; aspect-ratio: 1; object-fit: contain; pointer-events: none;
+  filter: drop-shadow(0 .45cqi .35cqi #17273952);
+}
+.result-emblem.pop { animation: emblem-pop .62s cubic-bezier(.19,.84,.37,1.27) both; }
+@keyframes emblem-pop {
+  0% { transform: translateY(-2cqi) rotate(-18deg) scale(.45); opacity: 0; }
+  66% { transform: translateY(.35cqi) rotate(6deg) scale(1.1); opacity: 1; }
+  100% { transform: none; }
+}
+.score-icon { flex: none; width: 32px; height: 32px; object-fit: contain; }
 .ribbon { position: absolute; left: 50%; top: 2cqi; transform: translateX(-50%); z-index: 3; font-family: var(--display); font-size: 3cqi; color: #5a3f00; background: #f6d36b; border: .25cqi solid var(--ink); border-radius: 999px; padding: .4cqi 3cqi; box-shadow: 0 .35cqi 0 var(--ink); white-space: nowrap; }
 .stage .panel { top: 4.4cqi; width: 48cqi; }
 .stage.mvp .panel { top: 8.4cqi; }
@@ -303,8 +315,10 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
   const POLL_MS = 3000;
   const BATCH = 10;
   const ACCENT = { customer: "#efbf87", manager: "#a9c8ff", colleague: "#a9dcbb" };
-  const art = (id, k) => "assets/pc/" + (ACCENT[id] ? id : "customer") + "/" + k + (k === "background" ? ".webp" : ".gif");
-  const rookie = k => "assets/pc/rookie/" + k + ".gif";
+  const SCORE_ART = { legend: "legend", great: "great", good: "positive", soso: "soso", retry: "negative", none: "idle" };
+  const art = (id, k) => "assets/pc/" + (ACCENT[id] ? id : "customer") + "/" + k + (k === "background" || reduced() ? ".webp" : ".gif");
+  const rookie = k => "assets/pc/rookie/" + k + (reduced() ? ".webp" : ".gif");
+  const emblem = k => "assets/pc/emblems/" + k + ".webp";
 
   // 시트를 못 읽을 때 쓰는 기본 상황 (시트 '상황' 탭과 같은 내용)
   const DEFAULTS = [
@@ -529,24 +543,31 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
   }
   function answerStage(s, r) {
     const x = resOf(r.id) || { failed: true };
+    const tier = tierOf(x.score);
     const animate = x.score != null && S.played !== r.id && !reduced();
     S.played = r.id;
-    const finalActor = x.reaction || "idle";
+    const finalActor = SCORE_ART[tier.key];
     const st = stageBase(s, animate ? "idle" : finalActor);
     if (S.mvp) st.classList.add("mvp");
     const actor = st.querySelector(".actor");
     const stamp = x.score != null ? stampEl(x, animate ? "big pre" : "big") : null;
+    const scoreEmblem = x.score != null
+      ? h("img", { class: "result-emblem", src: emblem(S.mvp ? "mvp" : tier.key), alt: "", hidden: animate, decoding: "async" })
+      : null;
+    const reactionSrc = art(s.id, finalActor);
+    if (animate) new Image().src = reactionSrc;
     const scoreNum = h("b", null, animate ? "0" : (x.score != null ? String(x.score) : "–"));
     const barFill = h("i", { style: "width:" + (animate ? 0 : (x.score || 0)) + "%" });
     const bubble = h("div", { class: "bubble" + (animate ? " pre" : "") },
       h("div", { class: "who" }, h("i"), s.role),
       x.line || "아직 채점하지 못했어요. '다시 채점'을 눌러 주세요.");
     const canvas = h("canvas", { class: "confetti" });
+    if (S.mvp) st.append(h("div", { class: "ribbon" }, "★ 오늘의 MVP ★"));
+    if (scoreEmblem) st.append(scoreEmblem);
     st.append(
-      S.mvp ? h("div", { class: "ribbon" }, "★ 오늘의 MVP ★") : null,
       h("div", { class: "panel" },
         h("div", { class: "mine" }, h("small", null, "신입 답변 #" + r.no), h("p", null, r.answer), stamp),
-        h("div", { class: "meter2 t-" + tierOf(x.score).key }, h("span", null, "AI 점수"), h("div", { class: "track" }, barFill), h("em", null, scoreNum, "점")),
+        h("div", { class: "meter2 t-" + tier.key }, h("span", null, "AI 점수"), h("div", { class: "track" }, barFill), h("em", null, scoreNum, "점")),
         bubble,
         S.memo && x.comment ? h("div", { class: "memo" }, "진행자 메모 · " + x.comment) : null),
       canvas);
@@ -563,9 +584,10 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
             stamp.classList.remove("pre"); stamp.classList.add("slam");
             st.classList.add("shake");
             thump(target >= 85 || S.mvp);
-            actor.src = art(s.id, finalActor);
+            actor.src = reactionSrc;
+            scoreEmblem.hidden = false; scoreEmblem.classList.add("pop");
             bubble.classList.remove("pre"); bubble.classList.add("pop");
-            if (target >= 85 || S.mvp) confetti(canvas, S.mvp ? 220 : 140);
+            if (target >= 85 || S.mvp) confetti(canvas, S.mvp ? 220 : (tier.key === "legend" ? 190 : 96));
           }, 250));
         }
       }, 30);
@@ -620,6 +642,7 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
       return h("button", { class: "acard t-" + t.key + (x.failed ? " failed" : "") + (r.id === S.sel ? " sel" : ""), type: "button", onclick: () => pick(r) },
         h("div", { class: "top" },
           h("span", { class: "num" }, "#" + r.no),
+          x.score != null ? img(emblem(t.key), "score-icon") : null,
           S.sortByScore && r.rank && x.score != null ? h("span", { class: "rank" + (r.rank <= 3 ? " r" + r.rank : "") }, r.rank + "위") : null),
         x.score != null ? stampEl(x, "mini") : h("span", { class: "fail-tag" }, "채점 실패"),
         h("p", { class: "ans" }, r.answer),
