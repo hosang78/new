@@ -263,6 +263,12 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
 .left { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; container-type: size; }
 .left .stage { width: min(100cqw, calc((100cqh - 64px) * 16 / 9)); scroll-margin-top: 76px; }
 .left .controls { min-height: 44px; }
+.left { position: relative; }
+.deco { position: absolute; z-index: 1; width: auto; max-width: none; pointer-events: none; user-select: none; }
+.deco.top { top: 0; }
+.deco.bottom { bottom: 0; }
+/* 높이가 넉넉하면 무대를 조금 줄여 위아래 장식 자리를 확보 */
+@container (min-height: 760px) { .left .stage { width: min(100cqw, calc((100cqh - 64px - 190px) * 16 / 9)); } }
 .right {
   min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
   background: var(--paper-2); border: 2px solid var(--ink); border-radius: 18px; box-shadow: 0 3px 0 var(--ink);
@@ -669,7 +675,11 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
       judged.length ? h("p", { class: "rfoot" }, "카드를 누르면 왼쪽 화면에서 도장이 쾅! · ← → 이동 · Esc 질문 화면") : null);
 
     document.body.classList.add("fit");
-    setChildren(view, h("div", { class: "layout" }, h("div", { class: "left" }, st, controls), aside));
+    const decoTop = img("assets/pc/deco/" + s.id + "-top.gif", "deco top");
+    const decoBottom = img("assets/pc/deco/" + s.id + "-bottom.gif", "deco bottom");
+    decoTop.hidden = decoBottom.hidden = true;
+    setChildren(view, h("div", { class: "layout" }, h("div", { class: "left", id: "leftPane" }, decoTop, st, controls, decoBottom), aside));
+    watchDeco();
     const list2 = document.getElementById("resultCards");
     if (list2) {
       list2.scrollTop = keepScroll;
@@ -691,6 +701,36 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
       if (el) el.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
     }
   }
+  // 무대 위아래 남는 여백에 장식 GIF를 맞춰 넣고, 여백이 모자라면 숨긴다
+  const DECO_MIN = 56, DECO_MAX = 150, DECO_RATIO = 448 / 140;
+  let decoObserver = null;
+  function fitDeco() {
+    const left = document.getElementById("leftPane"), st = document.getElementById("stage");
+    if (!left || !st) return;
+    const ctl = left.querySelector(".controls");
+    const top = left.querySelector(".deco.top"), bot = left.querySelector(".deco.bottom");
+    const L = left.getBoundingClientRect(), S2 = st.getBoundingClientRect(), C = ctl ? ctl.getBoundingClientRect() : S2;
+    const place = (el, free, offset, side) => {
+      if (!el) return;
+      const hgt = Math.min(free - 8, DECO_MAX, (S2.width * 0.42) / DECO_RATIO);
+      if (hgt < DECO_MIN) { el.hidden = true; return; }
+      el.hidden = false;
+      el.style.height = Math.round(hgt) + "px";
+      el.style.left = el.style.right = "";
+      el.style[side] = Math.round(offset + 12) + "px";
+      el.style[el === top ? "top" : "bottom"] = Math.round((free - hgt) / 2) + "px";
+    };
+    place(top, S2.top - L.top, S2.left - L.left, "left");
+    place(bot, L.bottom - C.bottom, L.right - S2.right, "right");
+  }
+  function watchDeco() {
+    if (decoObserver) decoObserver.disconnect();
+    const left = document.getElementById("leftPane");
+    if (!left) return;
+    if (window.ResizeObserver) { decoObserver = new ResizeObserver(() => fitDeco()); decoObserver.observe(left); }
+    requestAnimationFrame(fitDeco);
+  }
+  window.addEventListener("resize", () => { if (S.view === "stage") fitDeco(); });
   function backToQuestion() { S.sel = null; S.mvp = false; renderStage(); }
   async function poll() {
     if (polling || S.view !== "stage" || S.judging) return;
