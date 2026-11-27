@@ -39,13 +39,19 @@
     return { signal: ctrl.signal, done: () => clearTimeout(t) };
   }
 
+  function apiError(data, fallback) {
+    const err = new Error(data.message || data.error || fallback);
+    err.code = data.error || 'error';
+    return err;
+  }
+
   async function getJSON(params) {
     const url = cfg.API_URL + '?' + new URLSearchParams(params).toString();
     const t = withTimeout(15000);
     try {
       const res = await fetch(url, { signal: t.signal, redirect: 'follow' });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || '요청 실패');
+      if (!data.ok) throw apiError(data, '요청 실패');
       return data;
     } finally { t.done(); }
   }
@@ -62,7 +68,7 @@
         redirect: 'follow'
       });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || '저장 실패');
+      if (!data.ok) throw apiError(data, '저장 실패');
       return data;
     } finally { t.done(); }
   }
@@ -72,17 +78,24 @@
     participantId,
     isConnected,
 
+    // 반환: { scenarios: [...], locked: true|false }
     async loadScenarios() {
       const fallback = (window.DEFAULT_SCENARIOS || []).slice();
-      if (!isConnected()) return fallback;
+      if (!isConnected()) return { scenarios: fallback, locked: false };
       try {
         const data = await getJSON({ action: 'scenarios' });
         const list = (data.scenarios || []).filter(s => s && s.id);
-        return list.length ? list : fallback;
+        return { scenarios: list.length ? list : fallback, locked: !!data.locked };
       } catch (e) {
         console.warn('상황 데이터를 시트에서 불러오지 못해 기본값을 사용합니다.', e);
-        return fallback;
+        return { scenarios: fallback, locked: false };
       }
+    },
+
+    // 답변 잠금 여부 (확인 실패 시 null)
+    async getLocked() {
+      if (!isConnected()) return false;
+      try { return !!(await getJSON({ action: 'status' })).locked; } catch (e) { return null; }
     },
 
     async submitAnswer(scenario, answer) {
@@ -104,6 +117,27 @@
       if (!isConnected() || !submissionId || submissionId.indexOf('local-') === 0) return null;
       const data = await getJSON({ action: 'result', id: submissionId });
       return data.result || null; // { reaction: 'positive'|'negative', line: '...' }
+    },
+
+    /* ----- 관리자 ----- */
+    admin: {
+      token() { return store.get('admin-token', null); },
+      async login(password) {
+        const data = await postJSON({ action: 'admin_login', password });
+        store.set('admin-token', data.token);
+        return true;
+      },
+      async logout() {
+        const token = store.get('admin-token', null);
+        store.set('admin-token', null);
+        if (token && isConnected()) { try { await postJSON({ action: 'admin_logout', token }); } catch (e) {} }
+      },
+      async stats() {
+        return postJSON({ action: 'admin_stats', token: store.get('admin-token', null) });
+      },
+      async setLocked(locked) {
+        return postJSON({ action: 'admin_lock', token: store.get('admin-token', null), locked: !!locked });
+      }
     }
   };
 })();
