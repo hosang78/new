@@ -36,7 +36,7 @@ const CANVAS = { width: 1200, height: 1600 };
 const MAX_PNG_BYTES = 10 * 1024 * 1024;
 const MAX_STROKES_CHARS = 8 * 1024 * 1024;
 const HEADERS = ['작품번호', '제출시각', '제목', '설명', '상태', '폴더', '원본그림(PNG)', '선데이터(JSON)', '작품정보(JSON)',
-  '그린시간(초)', '획수', '점수', '기기ID', '제출ID'];
+  '그린시간(초)', '획수', '점 개수', '기기ID', '제출ID'];
 const COL = { id: 1, at: 2, title: 3, desc: 4, status: 5, folder: 6, png: 7, strokes: 8, info: 9, secs: 10, count: 11, points: 12, device: 13, sub: 14 };
 
 /* ---------------- 처음 설정 ---------------- */
