@@ -8,7 +8,7 @@
  *                      'soon'  → '준비 중' 카드로 표시(누를 수 없음)
  */
 window.APP_CONFIG = {
-  API_URL: '',
+  API_URL: 'https://script.google.com/macros/s/AKfycbzOBZqMMyR-nVOGu1NKP-vl9V7UktMqSDc4XyWUyCHF9jC0t0hzKYXYyRmMNNp2vF-l/exec',
 
   // 답변 제출 후 AI 반응(시트의 AI반응/AI대사 칸)을 확인하는 주기
   POLL_INTERVAL_MS: 5000,
