@@ -322,9 +322,8 @@ body.fit .view { max-width: none; min-height: 0; overflow: hidden; padding-block
   const BATCH = 10;
   const ACCENT = { customer: "#efbf87", manager: "#a9c8ff", colleague: "#a9dcbb" };
   const SCORE_ART = { legend: "legend", great: "great", good: "positive", soso: "soso", retry: "negative", none: "idle" };
-  // 움직이는 GIF 대신, 가장 잘 나온 장면 하나로 만든 정지 이미지를 쓴다
-  const art = (id, k) => "assets/pc/" + (ACCENT[id] ? id : "customer") + "/" + k + (k === "background" ? ".webp" : "-still.webp");
-  const rookie = k => "assets/pc/rookie/" + k + "-still.webp";
+  const art = (id, k) => "assets/pc/" + (ACCENT[id] ? id : "customer") + "/" + k + (k === "background" || reduced() ? ".webp" : ".gif");
+  const rookie = k => "assets/pc/rookie/" + k + (reduced() ? ".webp" : ".gif");
   const emblem = k => "assets/pc/emblems/" + k + ".webp";
 
   // 시트를 못 읽을 때 쓰는 기본 상황 (시트 '상황' 탭과 같은 내용)
