@@ -25,7 +25,7 @@ const SETTING_LOCK = '답변 잠금';
 const TOKEN_DAYS = 30;
 
 const SCENARIO_HEADERS = ['id', '순서', '제목', '한줄 대사', '장소', '상대역', '상황 설명', '상대 대사', '질문', '평가 포인트(AI용·휴대폰 비공개)', '사용'];
-const ANSWER_HEADERS = ['제출ID', '제출시각', '참여자(익명)', '상황ID', '상황', '답변', 'AI반응', 'AI대사', '반응시각'];
+const ANSWER_HEADERS = ['제출ID', '제출시각', '참여자(익명)', '상황ID', '상황', '답변', 'AI반응', 'AI대사', '반응시각', 'AI코멘트(진행자용)'];
 
 const MAX_ANSWER = 500;
 
@@ -73,8 +73,10 @@ function setup() {
     an = ss.insertSheet(SHEET_ANSWERS);
     an.getRange(1, 1, 1, ANSWER_HEADERS.length).setValues([ANSWER_HEADERS]);
   }
+  if (!an.getRange(1, 10).getValue()) an.getRange(1, 10).setValue(ANSWER_HEADERS[9]);
   styleHeader_(an, ANSWER_HEADERS.length);
   an.setColumnWidth(1, 110);
+  an.setColumnWidth(10, 320);
   an.setColumnWidth(2, 150);
   an.setColumnWidth(6, 380);
   an.setColumnWidth(8, 320);
@@ -136,6 +138,15 @@ function doPost(e) {
       case 'admin_stats':
         if (!checkToken_(body.token)) return json_({ ok: false, error: 'auth', message: '다시 로그인해 주세요.' });
         return json_({ ok: true, locked: isLocked_(), stats: readStats_() });
+      case 'admin_scenarios':
+        if (!checkToken_(body.token)) return json_({ ok: false, error: 'auth', message: '다시 로그인해 주세요.' });
+        return json_({ ok: true, scenarios: readScenarios_(true) });
+      case 'admin_answers':
+        if (!checkToken_(body.token)) return json_({ ok: false, error: 'auth', message: '다시 로그인해 주세요.' });
+        return json_({ ok: true, locked: isLocked_(), answers: readAnswers_(body) });
+      case 'admin_react':
+        if (!checkToken_(body.token)) return json_({ ok: false, error: 'auth', message: '다시 로그인해 주세요.' });
+        return json_({ ok: true, updated: writeReactions_(body.items) });
       case 'admin_lock':
         if (!checkToken_(body.token)) return json_({ ok: false, error: 'auth', message: '다시 로그인해 주세요.' });
         setSetting_(SETTING_LOCK, body.locked ? 'Y' : 'N');
@@ -149,17 +160,21 @@ function doPost(e) {
 }
 
 /* ---------------- 내부 함수 ---------------- */
-function readScenarios_() {
+// withEval=true 이면 평가 포인트 포함 (관리자/PC 전용)
+function readScenarios_(withEval) {
   const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_SCENARIOS);
   if (!sh || sh.getLastRow() < 2) return [];
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, SCENARIO_HEADERS.length).getDisplayValues();
   return rows
     .filter(r => r[0] && String(r[10]).trim().toUpperCase() !== 'N')
-    .map(r => ({
-      id: r[0].trim(), order: Number(r[1]) || 0, title: r[2], quote: r[3], scene: r[4],
-      role: r[5], situation: r[6], line: r[7], question: r[8]
-      // 평가 포인트(r[9])는 휴대폰으로 보내지 않습니다.
-    }));
+    .map(r => {
+      const o = {
+        id: r[0].trim(), order: Number(r[1]) || 0, title: r[2], quote: r[3], scene: r[4],
+        role: r[5], situation: r[6], line: r[7], question: r[8]
+      };
+      if (withEval) o.evalPoints = r[9]; // 평가 포인트는 휴대폰으로 보내지 않습니다.
+      return o;
+    });
 }
 
 function appendAnswer_(body) {
@@ -176,7 +191,7 @@ function appendAnswer_(body) {
     const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ANSWERS);
     if (!sh) throw new Error("'답변' 탭이 없습니다. setup을 먼저 실행하세요.");
     sh.appendRow([id, new Date(), participant, scenarioId,
-      safe_(String(body.scenarioTitle || '').slice(0, 60)), safe_(answer), '', '', '']);
+      safe_(String(body.scenarioTitle || '').slice(0, 60)), safe_(answer), '', '', '', '']);
   } finally {
     lock.releaseLock();
   }
@@ -304,6 +319,60 @@ function readStats_() {
   stats.lastAt = stats.lastAt ? stats.lastAt.toISOString() : null;
   stats.scenarios = Object.keys(byScenario).map(k => byScenario[k]);
   return stats;
+}
+
+/* ---------------- PC(진행자) 화면용 ---------------- */
+// body: { scenarioId?, onlyPending?, since?(ISO 시각) }
+function readAnswers_(body) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ANSWERS);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const sid = String(body.scenarioId || '').trim();
+  const since = body.since ? new Date(body.since) : null;
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 10).getValues();
+  const out = [];
+  rows.forEach(r => {
+    if (!r[0]) return;
+    if (sid && String(r[3]) !== sid) return;
+    const at = r[1] instanceof Date ? r[1] : null;
+    if (since && at && at < since) return;
+    const reaction = normalizeReaction_(r[6]);
+    if (body.onlyPending && reaction) return;
+    out.push({
+      id: String(r[0]), at: at ? at.toISOString() : null, participant: String(r[2]),
+      scenarioId: String(r[3]), scenarioTitle: String(r[4]), answer: String(r[5]),
+      reaction: reaction || null, line: String(r[7] || ''), comment: String(r[9] || '')
+    });
+  });
+  return out.slice(-500);
+}
+
+// items: [{ id, reaction: 'positive'|'negative', line, comment? }]
+function writeReactions_(items) {
+  if (!Array.isArray(items) || !items.length) return 0;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_ANSWERS);
+    if (!sh || sh.getLastRow() < 2) return 0;
+    const ids = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(r => String(r[0]));
+    const now = new Date();
+    let n = 0;
+    items.slice(0, 200).forEach(it => {
+      const i = ids.indexOf(String(it && it.id || ''));
+      const reaction = normalizeReaction_(it && it.reaction);
+      if (i < 0 || !reaction) return;
+      sh.getRange(i + 2, 7, 1, 4).setValues([[
+        reaction === 'positive' ? '긍정' : '부정',
+        safe_(String(it.line || '').slice(0, 300)),
+        now,
+        safe_(String(it.comment || '').slice(0, 500))
+      ]]);
+      n++;
+    });
+    return n;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function normalizeReaction_(v) {
