@@ -316,7 +316,7 @@
       }
       if (j.ok) return j;
       if (j.error === "bad" || j.error === "too_large") throw new Error(j.message || "보낼 수 없는 작품이에요.");
-      if (j.error === "locked") { applyLock(true); throw new Error("제출이 마감됐어요. 진행자에게 문의해 주세요."); }
+      if (j.error === "locked") { applyLock(true); throw new Error("지금은 제출할 수 없어요. 진행자가 다시 열면 [다시 보내기]를 눌러 주세요."); }
       last = new Error(j.message || "저장에 실패했어요. [다시 보내기]를 눌러 주세요.");   // busy · save_failed · server → 같은 제출ID로 재시도
     }
     throw last;
@@ -395,7 +395,7 @@
   function applyLock(v) {
     locked = !!v;
     const b = $("startBtn");
-    if (locked) { b.textContent = "제출이 마감됐어요"; b.classList.add("closed"); }
+    if (locked) { b.textContent = "아직 열리지 않았어요"; b.classList.add("closed"); }
     else { b.textContent = S.all.length ? "이어서 그리기" : "그리기 시작"; b.classList.remove("closed"); }
   }
   function renderPages(pages) {
@@ -442,7 +442,7 @@
   /* ---------- 시작 ---------- */
   $("modeNote").textContent = API_URL ? "드라이브 연결됨" : "데모 모드";
   $("startBtn").addEventListener("click", () => {
-    if (locked) { $("modeNote").textContent = "제출이 마감돼 더 그릴 수 없어요"; return; }
+    if (locked) { $("modeNote").textContent = "진행자가 열면 참여할 수 있어요"; return; }
     if (!S.all.length) S.t0 = Date.now();
     show("board");
   });

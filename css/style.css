@@ -334,3 +334,10 @@ a.menu-card:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink);
 .menu-item .adminbar { border: 2px solid var(--ink); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; }
 .menu-item .adminbar + .menu-card { border-top-left-radius: 0; border-top-right-radius: 0; }
 .menu-item .menu-card { flex: 1; }
+
+/* 메뉴 비활성 (진행자가 아직 열지 않음) */
+.menu-item.off .menu-card { cursor: not-allowed; box-shadow: none; }
+.menu-item.off .menu-art { filter: grayscale(1) opacity(.55); }
+.menu-item.off .menu-body h3, .menu-item.off .menu-body p { color: var(--muted); }
+.menu-item.off .menu-go { background: var(--line); color: var(--ink-2); }
+.menu-item.off a.menu-card:hover { transform: none; box-shadow: none; }

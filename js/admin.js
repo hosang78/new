@@ -109,10 +109,10 @@
     st = st || { scenarios: [] };
     const rows = (st.scenarios || []).map(s => '<tr><td>' + esc(s.title) + '</td><td>' + num(s.total) + '</td></tr>').join('');
     document.getElementById('roleArea').innerHTML =
-      '<section class="card"><h2>답변 잠금</h2>' +
-        '<div class="lock-state' + (locked ? ' is-locked' : '') + '"><span class="light"></span><strong>' + (locked ? '답변 마감됨' : '답변 받는 중') + '</strong></div>' +
-        '<p class="sub">' + (locked ? '신입직원은 새 답변을 제출할 수 없어요.' : '신입직원이 답변을 자유롭게 제출할 수 있어요.') + '</p>' +
-        '<button class="btn' + (locked ? '' : ' danger') + '" id="roleToggle" type="button">' + (locked ? '답변 다시 받기' : '답변 마감하기') + '</button>' +
+      '<section class="card"><h2>메뉴 상태</h2>' +
+        '<div class="lock-state' + (locked ? ' is-locked' : '') + '"><span class="light"></span><strong>' + (locked ? '비활성' : '활성') + '</strong></div>' +
+        '<p class="sub">' + (locked ? '메인 화면에서 닫혀 있어 참여자가 들어올 수 없어요.' : '참여자가 들어와 답변할 수 있어요.') + '</p>' +
+        '<button class="btn' + (locked ? '' : ' danger') + '" id="roleToggle" type="button">' + (locked ? '활성화' : '비활성화') + '</button>' +
         '<p class="status" id="roleStatus"></p></section>' +
       '<section class="card"><h2>제출 현황</h2>' +
         '<div class="tiles"><div class="tile"><span>전체 답변</span><b>' + num(st.total) + '</b></div><div class="tile"><span>참여자</span><b>' + num(st.participants) + '</b></div><div class="tile"><span>마지막 제출</span><b style="font-size:16px">' + esc(timeText(st.lastAt)) + '</b></div></div>' +
@@ -149,10 +149,10 @@
         (p ? '<button class="btn sm ghost" type="button" data-del="' + no + '">삭제</button>' : '') + '</div></li>';
     }
     document.getElementById('drawArea').innerHTML =
-      '<section class="card"><h2>그림 제출</h2>' +
-        '<div class="lock-state' + (d.locked ? ' is-locked' : '') + '"><span class="light"></span><strong>' + (d.locked ? '제출 마감됨' : '제출 받는 중') + '</strong></div>' +
-        '<p class="sub">지금까지 저장된 작품 <b>' + num(d.count) + '</b>개. ' + (d.locked ? '참여자 화면에서 그리기·제출이 막혀 있어요.' : '마감하면 더 이상 새 작품을 받지 않아요.') + '</p>' +
-        '<button class="btn' + (d.locked ? '' : ' danger') + '" id="drawToggle" type="button">' + (d.locked ? '제출 다시 받기' : '추가 제출 막기') + '</button>' +
+      '<section class="card"><h2>메뉴 상태</h2>' +
+        '<div class="lock-state' + (d.locked ? ' is-locked' : '') + '"><span class="light"></span><strong>' + (d.locked ? '비활성' : '활성') + '</strong></div>' +
+        '<p class="sub">지금까지 저장된 작품 <b>' + num(d.count) + '</b>개. ' + (d.locked ? '메인 화면에서 닫혀 있어 그리기·제출을 할 수 없어요.' : '참여자가 들어와 그리고 제출할 수 있어요.') + '</p>' +
+        '<button class="btn' + (d.locked ? '' : ' danger') + '" id="drawToggle" type="button">' + (d.locked ? '활성화' : '비활성화') + '</button>' +
         '<p class="status" id="drawStatus"></p></section>' +
       '<section class="card"><h2>결과 화면(HTML) 등록</h2>' +
         '<p class="sub">번호마다 HTML 파일을 올리면 참여자 화면 아래에 <b>1, 2, 3</b> 버튼이 생기고, 누르면 그 화면이 열려요. 파일이 있는 번호만 보여요.</p>' +

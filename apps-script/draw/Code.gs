@@ -284,7 +284,8 @@ function submit_(b) {
 }
 
 /* ---------------- 제출 마감 · 관리자 ---------------- */
-function isLocked_() { return PropertiesService.getScriptProperties().getProperty('LOCKED') === 'Y'; }
+// 처음에는 비활성(닫힘). 관리자가 활성화하면 LOCKED = 'N'
+function isLocked_() { return PropertiesService.getScriptProperties().getProperty('LOCKED') !== 'N'; }
 
 function countDone_() {
   const sh = indexSheet_(rootFolder_(false));

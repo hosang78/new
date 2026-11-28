@@ -33,7 +33,7 @@
 
   const lockNotice = () =>
     '<div class="lock-banner" role="status"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>' +
-    '<div><b>답변이 마감됐어요</b><span>지금은 새 답변을 제출할 수 없어요. 낸 답과 AI 반응은 계속 볼 수 있어요.</span></div></div>';
+    '<div><b>지금은 참여할 수 없어요</b><span>진행자가 이 메뉴를 열면 바로 답변할 수 있어요.</span></div></div>';
 
   // 잠금 상태가 바뀌면 현재 화면에 반영
   document.addEventListener("adminlock", e => { if (e.detail && e.detail.kind === "roleplay") setLocked(e.detail.locked); });

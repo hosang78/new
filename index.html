@@ -74,13 +74,50 @@
     const body = art(m) + '<div class="menu-body"><h3>' + esc(m.title) + '</h3><p>' + esc(m.desc) + '</p>' +
       '<span class="menu-go">' + (m.status === 'open' ? '시작하기 →' : '준비 중') + '</span></div>';
     return m.status === 'open'
-      ? '<li class="menu-item">' + (m.id === 'roleplay' || m.id === 'draw' ? '<div data-adminbar="' + m.id + '" hidden></div>' : '') +
+      ? '<li class="menu-item"' + (m.id === 'roleplay' || m.id === 'draw' ? ' data-menu="' + m.id + '"' : '') + '>' + (m.id === 'roleplay' || m.id === 'draw' ? '<div data-adminbar="' + m.id + '" hidden></div>' : '') +
         '<a class="menu-card" href="' + esc(m.href) + '">' + body + '</a></li>'
       : '<li><div class="menu-card soon" aria-disabled="true">' + body + '</div></li>';
   }).join('');
 
   const open = menus.filter(m => m.status === 'open').length;
   document.getElementById('menu-count').textContent = '참여 가능 ' + open + '개';
+
+  /* 메뉴 활성/비활성: 진행자가 하나씩 연다 (각 메뉴의 잠금 값 사용) */
+  const DRAW = /^https:\/\//.test(window.APP_CONFIG.DRAW_API_URL || '') ? window.APP_CONFIG.DRAW_API_URL : '';
+  const isAdmin = () => !!(API.admin.token() || API.store.get('draw-admin-token', null));
+  const STATES = {};
+  function applyStates() {
+    let openNow = 0;
+    document.querySelectorAll('.menu-item[data-menu]').forEach(li => {
+      const off = STATES[li.dataset.menu] === true;
+      li.classList.toggle('off', off);
+      const a = li.querySelector('a.menu-card');
+      a.setAttribute('aria-disabled', String(off));
+      a.querySelector('.menu-go').textContent = off ? '곧 열려요' : '시작하기 →';
+      if (!off) openNow++;
+    });
+    document.getElementById('menu-count').textContent = '지금 참여 가능 ' + openNow + '개';
+  }
+  async function refreshStates() {
+    const jobs = [];
+    if (API.isConnected()) jobs.push(API.getLocked().then(v => { if (v != null) STATES.roleplay = v; }));
+    if (DRAW) jobs.push(fetch(DRAW + '?action=pages&_=' + Date.now(), { redirect: 'follow' }).then(r => r.json())
+      .then(j => { if (j && j.ok && typeof j.locked === 'boolean') STATES.draw = j.locked; }).catch(() => {}));
+    await Promise.all(jobs);
+    applyStates();
+  }
+  grid.addEventListener('click', e => {
+    const li = e.target.closest('.menu-item.off');
+    if (li && e.target.closest('a.menu-card') && !isAdmin()) {
+      e.preventDefault();
+      const go = li.querySelector('.menu-go'); go.textContent = '진행자가 열면 참여할 수 있어요';
+      setTimeout(applyStates, 1800);
+    }
+  });
+  document.addEventListener('adminlock', e => { STATES[e.detail.kind] = e.detail.locked; applyStates(); });
+  refreshStates();
+  setInterval(() => { if (!document.hidden) refreshStates(); }, 10000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshStates(); });
   document.getElementById('anon-code').textContent = '익명 참여 · ' + API.participantId();
 })();
 </script>
