@@ -320,3 +320,17 @@ a.menu-card:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink);
 @media (max-width: 480px) { .slot { grid-template-columns: 40px minmax(0, 1fr); } .slot .acts { grid-column: 1 / -1; } }
 .btn.sm { width: auto; min-height: 38px; margin-top: 0; padding: 6px 12px; font-size: 14px; border-radius: 10px; box-shadow: 0 2px 0 var(--ink); white-space: nowrap; }
 .btn.danger { color: #fff; }
+
+/* ---------- 관리자 잠금 띠 ---------- */
+.adminbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; background: #1d2b45; color: #fff6df; font-size: 13.5px; font-weight: 700; }
+.adminbar .ab-tag { font-size: 11px; font-weight: 900; letter-spacing: .06em; background: #ffd166; color: #1d2b45; padding: 2px 8px; border-radius: 999px; }
+.adminbar .ab-dot { width: 9px; height: 9px; border-radius: 50%; background: #5bd18b; flex: none; }
+.adminbar.is-locked .ab-dot { background: #f0784b; }
+.adminbar .ab-text { flex: 1; min-width: 0; }
+.adminbar .ab-btn { flex: none; min-height: 32px; padding: 4px 12px; border-radius: 9px; border: 2px solid #fff6df; background: #c4552a; color: #fff; font: inherit; font-weight: 900; cursor: pointer; }
+.adminbar.is-locked .ab-btn { background: #2f7f86; }
+.adminbar .ab-btn[disabled] { opacity: .6; cursor: default; }
+.menu-item { display: flex; flex-direction: column; gap: 0; }
+.menu-item .adminbar { border: 2px solid var(--ink); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; }
+.menu-item .adminbar + .menu-card { border-top-left-radius: 0; border-top-right-radius: 0; }
+.menu-item .menu-card { flex: 1; }

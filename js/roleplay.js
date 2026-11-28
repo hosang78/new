@@ -36,6 +36,7 @@
     '<div><b>답변이 마감됐어요</b><span>지금은 새 답변을 제출할 수 없어요. 낸 답과 AI 반응은 계속 볼 수 있어요.</span></div></div>';
 
   // 잠금 상태가 바뀌면 현재 화면에 반영
+  document.addEventListener("adminlock", e => { if (e.detail && e.detail.kind === "roleplay") setLocked(e.detail.locked); });
   function setLocked(v) {
     if (v == null || v === locked) return;
     locked = v;

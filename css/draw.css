@@ -199,3 +199,14 @@ img { display: block; max-width: 100%; }
 .viewer-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
 .viewer-msg { margin: 0; padding: 40px 20px; text-align: center; color: var(--ink-2); }
 .btn.big.closed { background: var(--muted); }
+
+/* ---------- 관리자 잠금 띠 ---------- */
+.adminbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; background: #1d2b45; color: #fff6df; font-size: 13.5px; font-weight: 700; }
+.adminbar .ab-tag { font-size: 11px; font-weight: 900; letter-spacing: .06em; background: #ffd166; color: #1d2b45; padding: 2px 8px; border-radius: 999px; }
+.adminbar .ab-dot { width: 9px; height: 9px; border-radius: 50%; background: #5bd18b; flex: none; }
+.adminbar.is-locked .ab-dot { background: #f0784b; }
+.adminbar .ab-text { flex: 1; min-width: 0; }
+.adminbar .ab-btn { flex: none; min-height: 32px; padding: 4px 12px; border-radius: 9px; border: 2px solid #fff6df; background: #c4552a; color: #fff; font: inherit; font-weight: 900; cursor: pointer; }
+.adminbar.is-locked .ab-btn { background: #2f7f86; }
+.adminbar .ab-btn[disabled] { opacity: .6; cursor: default; }
+.intro > .adminbar { padding-left: 66px; min-height: 66px; }

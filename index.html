@@ -74,7 +74,8 @@
     const body = art(m) + '<div class="menu-body"><h3>' + esc(m.title) + '</h3><p>' + esc(m.desc) + '</p>' +
       '<span class="menu-go">' + (m.status === 'open' ? '시작하기 →' : '준비 중') + '</span></div>';
     return m.status === 'open'
-      ? '<li><a class="menu-card" href="' + esc(m.href) + '">' + body + '</a></li>'
+      ? '<li class="menu-item">' + (m.id === 'roleplay' || m.id === 'draw' ? '<div data-adminbar="' + m.id + '" hidden></div>' : '') +
+        '<a class="menu-card" href="' + esc(m.href) + '">' + body + '</a></li>'
       : '<li><div class="menu-card soon" aria-disabled="true">' + body + '</div></li>';
   }).join('');
 
@@ -83,5 +84,6 @@
   document.getElementById('anon-code').textContent = '익명 참여 · ' + API.participantId();
 })();
 </script>
+<script src="js/adminbar.js"></script>
 </body>
 </html>

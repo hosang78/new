@@ -391,6 +391,7 @@
 
   /* ---------- 결과 화면(HTML) 번호 버튼 · 제출 마감 ---------- */
   let locked = false;
+  document.addEventListener("adminlock", e => { if (e.detail && e.detail.kind === "draw") applyLock(e.detail.locked); });
   function applyLock(v) {
     locked = !!v;
     const b = $("startBtn");
